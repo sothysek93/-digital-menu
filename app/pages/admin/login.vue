@@ -1,54 +1,51 @@
 <template>
-  <div class="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
-    <!-- Grid Background -->
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-    <Card class="w-full max-w-sm bg-neutral-900 border-neutral-800 rounded-[2rem] p-4 relative z-10">
-      <CardHeader class="space-y-1 pb-8 text-center pt-8">
-        <CardTitle class="text-3xl font-black tracking-tighter text-white">AUTHENTICATION</CardTitle>
-        <CardDescription class="text-neutral-500 uppercase tracking-[0.2em] text-[10px] font-bold">Secure Access for Management</CardDescription>
+  <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <Card class="w-full max-w-sm border-slate-200 shadow-sm">
+      <CardHeader class="space-y-1 text-center">
+        <CardTitle class="text-2xl font-bold tracking-tight">Admin Login</CardTitle>
+        <CardDescription>Enter your credentials to access the menu manager</CardDescription>
       </CardHeader>
 
       <CardContent>
         <form @submit.prevent="login" class="space-y-4">
           <div class="space-y-2">
-            <Label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-400">Email</Label>
+            <Label for="email">Email</Label>
             <Input 
               id="email"
               v-model="credentials.email" 
               type="email" 
-              placeholder="operator@kitchen.internal"
-              class="bg-neutral-950 border-neutral-800 h-12 rounded-xl focus-visible:ring-white transition-all"
+              placeholder="name@example.com"
+              required
             />
           </div>
 
           <div class="space-y-2">
-            <Label for="password" class="text-xs font-bold uppercase tracking-widest text-neutral-400">Security Key</Label>
+            <Label for="password">Password</Label>
             <Input 
               id="password"
               v-model="credentials.password" 
               type="password" 
               placeholder="••••••••"
-              class="bg-neutral-950 border-neutral-800 h-12 rounded-xl focus-visible:ring-white transition-all"
+              required
             />
           </div>
 
-          <div v-if="error" class="text-xs text-red-500 font-bold uppercase tracking-tighter text-center animate-pulse">
+          <div v-if="error" class="text-xs text-red-500 font-medium text-center">
             {{ error }}
           </div>
 
           <Button 
             type="submit" 
-            class="w-full h-12 rounded-xl bg-white text-black font-black uppercase tracking-[0.2em] hover:bg-neutral-200 transition-all mt-4" 
+            class="w-full mt-2" 
             :disabled="loading"
           >
-            <span v-if="!loading">Execute Login</span>
-            <LucideLoader2 v-else class="w-4 h-4 animate-spin" />
+            <LucideLoader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+            Login
           </Button>
 
-          <div class="text-center pt-6 pb-4">
-            <NuxtLink to="/admin/register" class="text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors">
-              Request New Credentials
+          <div class="text-center pt-2">
+            <NuxtLink to="/admin/register" class="text-sm text-slate-500 hover:text-slate-900 underline underline-offset-4 font-medium transition-colors">
+              Don't have an account? Register
             </NuxtLink>
           </div>
         </form>
@@ -57,30 +54,35 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { LucideLoader2 } from 'lucide-vue-next';
 
+// RELYING ON NUXT AUTO-IMPORTS FOR Card, Button, Input, etc.
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
 const credentials = reactive({ email: '', password: '' });
+
+// Use secure cookie for session
+const token = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/' });
 const userState = useState('user');
 
 const login = async () => {
+  if (loading.value) return;
   loading.value = true;
   error.value = '';
   
   try {
-    const res = await $fetch('/api/admin/login', {
+    const res = await $fetch('/api/admin/login' as any, {
       method: 'POST',
       body: credentials
-    });
+    }) as any;
     
-    localStorage.setItem('token', res.token);
+    token.value = res.token;
     userState.value = res.user;
     router.push('/admin');
   } catch (err) {
-    error.value = 'ACCESS DENIED: INVALID SIGNATURE';
+    error.value = 'Invalid email or password';
   } finally {
     loading.value = false;
   }
