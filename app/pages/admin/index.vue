@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-slate-50 flex flex-col">
+  <div v-if="!user" class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+     <LucideLoader2 class="w-8 h-8 animate-spin text-slate-300" />
+     <span class="ml-4 text-slate-400 font-medium tracking-tight">Synchronizing Restaurant Identity...</span>
+  </div>
+  <div v-else class="min-h-screen bg-slate-50 flex flex-col">
     <!-- Header -->
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -37,7 +41,6 @@
             </DialogHeader>
 
             <form @submit.prevent="saveItem" class="space-y-4 pt-4">
-              <!-- Form contents same as before -->
               <div class="space-y-2">
                 <Label for="dish_name">Dish Name</Label>
                 <Input id="dish_name" v-model="form.name" placeholder="Classic Burger" required />
@@ -91,6 +94,7 @@
         </Dialog>
       </div>
 
+      <!-- Inventory Table -->
       <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
         <Table>
           <TableHeader class="bg-slate-50">
@@ -139,7 +143,7 @@
         </Table>
       </Card>
       
-      <!-- Public URL Info same as before -->
+      <!-- Public URL Info -->
       <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
@@ -147,11 +151,11 @@
           </div>
           <div>
             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Public Menu Link</div>
-            <div class="text-sm font-medium text-slate-900">https://digital-menu-95n.pages.dev/{{ user?.slug }}</div>
+            <div class="text-sm font-medium text-slate-900 underline-offset-4 decoration-slate-200 underline decoration-2">https://digital-menu-95n.pages.dev/{{ user?.slug }}</div>
           </div>
         </div>
         <Button variant="outline" class="rounded-full shadow-sm" as-child>
-           <NuxtLink :to="`/${user?.slug}`" target="_blank">
+           <NuxtLink :to="`/${user?.slug}`" target="_blank" v-if="user?.slug">
              View Live Menu
              <LucideExternalLink class="ml-2 h-4 w-4" />
            </NuxtLink>
@@ -178,17 +182,12 @@ import {
   DialogDescription, DialogFooter, DialogTrigger 
 } from '../../components/ui/dialog';
 
-// Use proper Nuxt middleware
+// Use proper Nuxt middleware (MUST BE EAGER)
 definePageMeta({ middleware: 'auth' });
 
 const router = useRouter();
 const user = useState('user') as any;
-const token = useCookie('token', { 
-  maxAge: 60 * 60 * 24 * 7, 
-  path: '/',
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production'
-});
+const token = useCookie('token');
 const isSaving = ref(false);
 const isModalOpen = ref(false);
 
@@ -202,11 +201,12 @@ const form = reactive({
 });
 
 // useAsyncData for instant SSR rendering on refresh
+// Eager identity check is now handled in middleware/auth.ts
 const { data: menuItems, pending, refresh: refreshItems } = await useAsyncData('admin-menu', async () => {
   if (!user.value?.slug) return [];
   return await $fetch(`/api/public/menu?slug=${user.value.slug}`) as any;
 }, {
-  watch: [user] // Re-fetch if user state changes (e.g. after login/reconstruct)
+  watch: [user] 
 });
 
 const openModal = (item: any = null) => {
