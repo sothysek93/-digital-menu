@@ -37,6 +37,7 @@
             </DialogHeader>
 
             <form @submit.prevent="saveItem" class="space-y-4 pt-4">
+              <!-- Form contents same as before -->
               <div class="space-y-2">
                 <Label for="dish_name">Dish Name</Label>
                 <Input id="dish_name" v-model="form.name" placeholder="Classic Burger" required />
@@ -90,7 +91,6 @@
         </Dialog>
       </div>
 
-      <!-- Inventory Table -->
       <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
         <Table>
           <TableHeader class="bg-slate-50">
@@ -103,7 +103,7 @@
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="item in items" :key="item.id">
+            <TableRow v-for="item in menuItems" :key="item.id">
               <TableCell>
                 <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
                   <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover" />
@@ -130,7 +130,7 @@
                 </div>
               </TableCell>
             </TableRow>
-            <TableRow v-if="!pending && items.length === 0">
+            <TableRow v-if="!pending && (!menuItems || menuItems.length === 0)">
               <TableCell colspan="5" class="py-12 text-center text-slate-400 font-medium">
                 No items found. Add your first item above!
               </TableCell>
@@ -139,7 +139,7 @@
         </Table>
       </Card>
       
-      <!-- Public URL Info -->
+      <!-- Public URL Info same as before -->
       <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
@@ -184,8 +184,6 @@ definePageMeta({ middleware: 'auth' });
 const router = useRouter();
 const user = useState('user') as any;
 const token = useCookie('token');
-const items = ref([]);
-const pending = ref(true);
 const isSaving = ref(false);
 const isModalOpen = ref(false);
 
@@ -198,26 +196,13 @@ const form = reactive({
   is_available: true
 });
 
-onMounted(() => {
-  if (token.value) {
-    refreshItems();
-  } else {
-    router.push('/admin/login');
-  }
+// useAsyncData for instant SSR rendering on refresh
+const { data: menuItems, pending, refresh: refreshItems } = await useAsyncData('admin-menu', async () => {
+  if (!user.value?.slug) return [];
+  return await $fetch(`/api/public/menu?slug=${user.value.slug}`) as any;
+}, {
+  watch: [user] // Re-fetch if user state changes (e.g. after login/reconstruct)
 });
-
-const refreshItems = async () => {
-  if (!user.value?.slug) return;
-  pending.value = true;
-  try {
-    const res = await $fetch(`/api/public/menu?slug=${user.value.slug}`) as any;
-    items.value = res || [];
-  } catch (e) {
-    console.error('Fetch items error:', e);
-  } finally {
-    pending.value = false;
-  }
-};
 
 const openModal = (item: any = null) => {
   if (item) {

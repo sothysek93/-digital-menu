@@ -7,13 +7,28 @@ export default defineEventHandler(async (event) => {
     !event.path.includes('/login') && 
     !event.path.includes('/register')
   ) {
+    let token = '';
+
+    // 1. Try to get token from Authorization header
     const authHeader = getHeader(event, 'authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+
+    // 2. If no header, try to get token from Cookie (Critical for SSR Refreshes)
+    if (!token) {
+      const cookie = getCookie(event, 'token');
+      if (cookie) {
+        token = cookie;
+      }
+    }
+
+    // If still no token, fail unauthorized
+    if (!token) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
     }
     
-    const token = authHeader.split(' ')[1] || '';
+    // Verify token with Cloudflare Edge compatibility
     const user = await AuthService.verify(event, token);
     
     if (!user) {
