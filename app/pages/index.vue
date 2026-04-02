@@ -1,55 +1,76 @@
 <template>
-  <div class="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center">
-    <div class="max-w-4xl space-y-12">
-      <div class="space-y-4">
-        <UBadge color="primary" variant="soft" class="rounded-full px-4 py-1 text-sm font-bold uppercase tracking-widest">Digital Menu Platform</UBadge>
-        <h1 class="text-6xl md:text-8xl font-black gradient-text tracking-tighter leading-tight">Modern Experience for Modern Kitchens.</h1>
-        <p class="text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">The only digital menu platform built for performance, aesthetics, and simplicity. Zero hardware, total control.</p>
+  <div class="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
+    <!-- Subtle Background Accents -->
+    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-pink-500/10 blur-[120px] rounded-full -translate-y-1/2"></div>
+    <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-600/10 blur-[120px] rounded-full translate-y-1/2"></div>
+
+    <div class="max-w-5xl space-y-16 relative z-10">
+      <div class="space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+        <Badge variant="secondary" class="rounded-full px-6 py-2 text-xs font-bold uppercase tracking-[0.2em] bg-neutral-900 border-neutral-800 text-neutral-400">
+          Digital Menu Platform v1.0
+        </Badge>
+        <h1 class="text-6xl md:text-8xl font-black tracking-tight leading-[0.95] text-white">
+          The <span class="text-neutral-500">Fastest</span> Way <br> to Fresh Menus.
+        </h1>
+        <p class="text-xl text-neutral-400 max-w-2xl mx-auto font-light leading-relaxed">
+          Elite digital menu management for high-performance kitchens. 
+          Upload assets, manage stock, and deploy in seconds—zero hardware required.
+        </p>
       </div>
 
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-        <UButton 
-          to="/admin/register" 
-          color="primary" 
-          size="xl" 
-          class="rounded-2xl px-10 py-5 font-bold uppercase tracking-wider text-lg shadow-2xl shadow-pink-500/20"
-          label="Build Your Menu Now" 
-        />
-        <UButton 
-          to="/admin/login" 
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+        <Button 
+          as-child
+          size="lg" 
+          class="h-14 px-10 rounded-full font-bold text-base uppercase tracking-widest bg-white text-black hover:bg-neutral-200"
+        >
+          <NuxtLink to="/admin/register">Get Started Free</NuxtLink>
+        </Button>
+        <Button 
+          as-child
           variant="outline" 
-          color="neutral" 
-          size="xl" 
-          class="rounded-2xl px-10 py-5 font-bold uppercase tracking-wider text-lg border-2 border-neutral-800 hover:bg-neutral-900"
-          label="Manage Restaurant" 
-        />
+          size="lg" 
+          class="h-14 px-10 rounded-full font-bold text-base uppercase tracking-widest border-neutral-800 bg-neutral-950 text-white hover:bg-neutral-900"
+        >
+          <NuxtLink to="/admin/login">Manage Table</NuxtLink>
+        </Button>
       </div>
 
-      <div class="pt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-        <div class="glass p-8 rounded-3xl border border-neutral-800/50 bg-neutral-900/40">
-          <UIcon name="i-heroicons-bolt" class="w-10 h-10 text-pink-500 mb-4" />
-          <h3 class="text-xl font-bold mb-2">Lightning Fast</h3>
-          <p class="text-sm text-neutral-500">Built with Nuxt 4 and Cloudflare R2 for zero-latency menu browsing experience.</p>
-        </div>
-        <div class="glass p-8 rounded-3xl border border-neutral-800/50 bg-neutral-900/40">
-          <UIcon name="i-heroicons-eye" class="w-10 h-10 text-violet-500 mb-4" />
-          <h3 class="text-xl font-bold mb-2">Visual Masterpiece</h3>
-          <p class="text-sm text-neutral-500">Stunning glassmorphism design that mirrors the quality of your signature dishes.</p>
-        </div>
-        <div class="glass p-8 rounded-3xl border border-neutral-800/50 bg-neutral-900/40">
-          <UIcon name="i-heroicons-puzzle-piece" class="w-10 h-10 text-blue-500 mb-4" />
-          <h3 class="text-xl font-bold mb-2">Total Control</h3>
-          <p class="text-sm text-neutral-500">Full CRUD administration with instant updates across all public devices.</p>
-        </div>
+      <div class="pt-24 grid grid-cols-1 md:grid-cols-3 gap-6 text-left animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
+        <Card class="bg-neutral-900/40 border-neutral-800/50 backdrop-blur-md rounded-[2.5rem] p-8 hover:bg-neutral-900 transition-colors cursor-default group">
+          <div class="w-12 h-12 rounded-2xl bg-neutral-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <LucideZap class="w-6 h-6 text-white" />
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 italic">Nitro-Speed</h3>
+          <p class="text-sm text-neutral-500 leading-relaxed font-medium">Built on Nuxt 4 & Cloudflare for instantaneous updates across every customer device.</p>
+        </Card>
+
+        <Card class="bg-neutral-900/40 border-neutral-800/50 backdrop-blur-md rounded-[2.5rem] p-8 hover:bg-neutral-900 transition-colors cursor-default group">
+          <div class="w-12 h-12 rounded-2xl bg-neutral-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <LucideImage class="w-6 h-6 text-white" />
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 italic">R2 Storage</h3>
+          <p class="text-sm text-neutral-500 leading-relaxed font-medium">Ultra-high resolution image hosting for your dishes with globally distributed delivery.</p>
+        </Card>
+
+        <Card class="bg-neutral-900/40 border-neutral-800/50 backdrop-blur-md rounded-[2.5rem] p-8 hover:bg-neutral-900 transition-colors cursor-default group">
+          <div class="w-12 h-12 rounded-2xl bg-neutral-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <LucideTerminal class="w-6 h-6 text-white" />
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 italic">Serverless D1</h3>
+          <p class="text-sm text-neutral-500 leading-relaxed font-medium">Real-time SQLite database ensures your menu logic is always in sync with your kitchen.</p>
+        </Card>
       </div>
 
-      <div class="pt-20 text-neutral-600 font-bold uppercase text-[11px] tracking-[0.4em]">
-        Powered by Tipsha Technology
+      <div class="pt-32 flex items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+        <span class="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Powered by Nuxt 4</span>
+        <div class="w-1 h-1 rounded-full bg-neutral-800"></div>
+        <span class="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-400">Cloudflare Edge</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// Landing page logic
+import { LucideZap, LucideImage, LucideTerminal } from 'lucide-vue-next';
 </script>

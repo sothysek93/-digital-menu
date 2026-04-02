@@ -1,55 +1,65 @@
 <template>
-  <div class="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
-    <div class="w-full max-w-md glass p-8 rounded-3xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-2xl">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-extrabold gradient-text mb-2">Welcome Back</h1>
-        <p class="text-neutral-400 text-sm italic">Manage your digital menu items with ease.</p>
-      </div>
+  <div class="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Grid Background -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
-      <form @submit.prevent="login" class="space-y-6">
-        <UFormGroup label="Email address" name="email" :error="error">
-          <UInput 
-            v-model="credentials.email" 
-            type="email" 
-            placeholder="admin@restaurant.com" 
-            icon="i-heroicons-envelope" 
-            size="lg" 
-            class="rounded-xl"
-          />
-        </UFormGroup>
+    <Card class="w-full max-w-sm bg-neutral-900 border-neutral-800 rounded-[2rem] p-4 relative z-10">
+      <CardHeader class="space-y-1 pb-8 text-center pt-8">
+        <CardTitle class="text-3xl font-black tracking-tighter text-white">AUTHENTICATION</CardTitle>
+        <CardDescription class="text-neutral-500 uppercase tracking-[0.2em] text-[10px] font-bold">Secure Access for Management</CardDescription>
+      </CardHeader>
 
-        <UFormGroup label="Password" name="password">
-          <UInput 
-            v-model="credentials.password" 
-            type="password" 
-            placeholder="••••••••" 
-            icon="i-heroicons-lock-closed" 
-            size="lg"
-            class="rounded-xl"
-          />
-        </UFormGroup>
+      <CardContent>
+        <form @submit.prevent="login" class="space-y-4">
+          <div class="space-y-2">
+            <Label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-400">Email</Label>
+            <Input 
+              id="email"
+              v-model="credentials.email" 
+              type="email" 
+              placeholder="operator@kitchen.internal"
+              class="bg-neutral-950 border-neutral-800 h-12 rounded-xl focus-visible:ring-white transition-all"
+            />
+          </div>
 
-        <UButton 
-          type="submit" 
-          block 
-          color="primary" 
-          size="xl" 
-          label="Sign In" 
-          :loading="loading" 
-          class="rounded-2xl font-bold uppercase tracking-wider"
-        />
+          <div class="space-y-2">
+            <Label for="password" class="text-xs font-bold uppercase tracking-widest text-neutral-400">Security Key</Label>
+            <Input 
+              id="password"
+              v-model="credentials.password" 
+              type="password" 
+              placeholder="••••••••"
+              class="bg-neutral-950 border-neutral-800 h-12 rounded-xl focus-visible:ring-white transition-all"
+            />
+          </div>
 
-        <div class="text-center text-sm">
-          <p class="text-neutral-400">Don't have an account? 
-            <NuxtLink to="/admin/register" class="text-primary hover:underline font-bold">Register here</NuxtLink>
-          </p>
-        </div>
-      </form>
-    </div>
+          <div v-if="error" class="text-xs text-red-500 font-bold uppercase tracking-tighter text-center animate-pulse">
+            {{ error }}
+          </div>
+
+          <Button 
+            type="submit" 
+            class="w-full h-12 rounded-xl bg-white text-black font-black uppercase tracking-[0.2em] hover:bg-neutral-200 transition-all mt-4" 
+            :disabled="loading"
+          >
+            <span v-if="!loading">Execute Login</span>
+            <LucideLoader2 v-else class="w-4 h-4 animate-spin" />
+          </Button>
+
+          <div class="text-center pt-6 pb-4">
+            <NuxtLink to="/admin/register" class="text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors">
+              Request New Credentials
+            </NuxtLink>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
 <script setup>
+import { LucideLoader2 } from 'lucide-vue-next';
+
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
@@ -70,7 +80,7 @@ const login = async () => {
     userState.value = res.user;
     router.push('/admin');
   } catch (err) {
-    error.value = 'Invalid email or password';
+    error.value = 'ACCESS DENIED: INVALID SIGNATURE';
   } finally {
     loading.value = false;
   }

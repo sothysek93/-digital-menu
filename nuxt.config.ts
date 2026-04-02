@@ -3,11 +3,20 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   nitro: {
-    preset: 'cloudflare-pages',
-    node: true // Explicitly enable node polyfills in Nitro
+    preset: 'cloudflare-pages'
   },
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxt/ui'],
+  modules: ['shadcn-nuxt'],
+  shadcn: {
+    prefix: '',
+    componentDir: './app/components/ui'
+  },
+  postcss: {
+    plugins: {
+      '@tailwindcss/postcss': {},
+      'autoprefixer': {}
+    }
+  },
   future: {
     compatibilityVersion: 4
   }
