@@ -183,7 +183,12 @@ definePageMeta({ middleware: 'auth' });
 
 const router = useRouter();
 const user = useState('user') as any;
-const token = useCookie('token');
+const token = useCookie('token', { 
+  maxAge: 60 * 60 * 24 * 7, 
+  path: '/',
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production'
+});
 const isSaving = ref(false);
 const isModalOpen = ref(false);
 

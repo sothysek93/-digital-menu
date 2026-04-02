@@ -66,8 +66,13 @@ const loading = ref(false);
 const error = ref('');
 const credentials = reactive({ email: '', password: '' });
 
-// Use secure cookie for session
-const token = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/' });
+// Use secure cookie for session with explicit Edge compatibility
+const token = useCookie('token', { 
+  maxAge: 60 * 60 * 24 * 7, 
+  path: '/', 
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production'
+});
 const userState = useState('user');
 
 const login = async () => {

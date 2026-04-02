@@ -18,12 +18,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       });
       user.value = data;
     } catch (e: any) {
-      // ONLY wipe the cookie if the server EXPLICITLY says 401 (Invalid/Expired)
-      // Otherwise, keep it—it might just be a server-restarting or building issue.
-      if (e.response?.status === 401) {
-        token.value = null;
-        user.value = null;
-      }
+      console.warn('Session reconstruction failed, but keeping the token for retry.');
+      // WE NO LONGER WIPE THE TOKEN HERE!
+      // This ensures that temporary server delays don't log you out.
     }
   }
 });
