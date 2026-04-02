@@ -230,22 +230,17 @@ const uploadImage = async (event) => {
   if (!file) return;
 
   try {
-    const { uploadUrl, key } = await $fetch('/api/upload', {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('restaurantId', user.value.id);
+
+    const res = await $fetch('/api/upload', {
       method: 'POST',
-      body: { 
-        fileName: file.name, 
-        restaurantId: user.value.id 
-      },
+      body: formData,
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
 
-    await $fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type }
-    });
-
-    form.image_url = `https://menus.tipsha.com/${key}`;
+    form.image_url = res.url;
   } catch (e) {
     console.error('Upload error:', e);
   }

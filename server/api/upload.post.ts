@@ -1,19 +1,32 @@
 import { StorageService } from '../services/storage.service';
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
-  const { fileName, restaurantId } = body;
+  const formData = await readMultipartFormData(event);
   
-  if (!fileName || !restaurantId) {
-    throw createError({ 
-      statusCode: 400, 
-      statusMessage: 'Missing fileName or restaurantId in body' 
-    });
+  if (!formData) {
+    throw createError({ statusCode: 400, statusMessage: 'Missing file data' });
   }
-  
-  const uploadUrl = await StorageService.getUploadUrl(event, restaurantId, fileName);
+
+  const fileNode = formData.find(p => p.name === 'file');
+  const restaurantIdNode = formData.find(p => p.name === 'restaurantId');
+
+  if (!fileNode || !restaurantIdNode) {
+    throw createError({ statusCode: 400, statusMessage: 'File asset or Restaurant ID missing' });
+  }
+
+  const restaurantId = restaurantIdNode.data.toString();
+  const fileName = fileNode.filename || 'upload.jpg';
+
+  // Upload to R2 via native binding
+  const key = await StorageService.uploadDirect(
+    event, 
+    restaurantId, 
+    fileName, 
+    fileNode.data
+  );
+
   return { 
-    uploadUrl,
-    key: `menus/${restaurantId}/${fileName}`
+    key, 
+    url: `https://menus.tipsha.com/${key}` 
   };
 });
