@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
     
     const token = authHeader.split(' ')[1];
-    const user = await AuthService.verify(token);
+    const user = await AuthService.verify(event, token);
     
     if (!user) {
       throw createError({ statusCode: 401, statusMessage: 'Invalid or expired token' });

@@ -3,20 +3,25 @@ import bcrypt from 'bcryptjs';
 import { query } from '../db';
 import { H3Event } from 'h3';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_for_dev_only');
-
 export class AuthService {
-  static async sign(payload: any) {
+  static async getSecret(event: any) {
+    const secret = event.context.cloudflare?.env?.JWT_SECRET || 'fallback_secret_for_dev_only';
+    return new TextEncoder().encode(secret);
+  }
+
+  static async sign(event: any, payload: any) {
+    const secret = await this.getSecret(event);
     return new jose.SignJWT(payload)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(JWT_SECRET);
+      .sign(secret);
   }
 
-  static async verify(token: string) {
+  static async verify(event: any, token: string) {
     try {
-      const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+      const secret = await this.getSecret(event);
+      const { payload } = await jose.jwtVerify(token, secret);
       return payload;
     } catch (e) {
       return null;

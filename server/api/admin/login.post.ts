@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' });
   }
   
-  const token = await AuthService.sign({ 
+  const token = await AuthService.sign(event, { 
     id: user.id, 
     email: user.email,
     slug: user.slug 
