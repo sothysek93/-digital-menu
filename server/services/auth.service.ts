@@ -1,18 +1,23 @@
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import bcrypt from 'bcryptjs';
 import { query } from '../db';
 import { H3Event } from 'h3';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev_only';
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_for_dev_only');
 
 export class AuthService {
   static async sign(payload: any) {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    return new jose.SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .sign(JWT_SECRET);
   }
 
   static async verify(token: string) {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+      return payload;
     } catch (e) {
       return null;
     }
