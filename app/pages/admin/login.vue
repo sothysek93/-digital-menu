@@ -56,8 +56,11 @@
 
 <script setup lang="ts">
 import { LucideLoader2 } from 'lucide-vue-next';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
-// RELYING ON NUXT AUTO-IMPORTS FOR Card, Button, Input, etc.
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');

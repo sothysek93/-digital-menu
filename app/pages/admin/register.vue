@@ -79,8 +79,11 @@
 
 <script setup lang="ts">
 import { LucideShieldCheck, LucideLoader2 } from 'lucide-vue-next';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
-// RELYING ON NUXT AUTO-IMPORTS FOR Card, Button, Input, etc.
 const router = useRouter();
 const loading = ref(false);
 const token = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/' });
@@ -97,13 +100,13 @@ const register = async () => {
   if (loading.value) return;
   loading.value = true;
   try {
-    await $fetch('/api/admin/register', {
+    await $fetch('/api/admin/register' as any, {
       method: 'POST',
       body: form
     });
     
     // Auto login after registration
-    const res = await $fetch('/api/admin/login', {
+    const res = await $fetch('/api/admin/login' as any, {
       method: 'POST',
       body: { email: form.email, password: form.password }
     }) as any;

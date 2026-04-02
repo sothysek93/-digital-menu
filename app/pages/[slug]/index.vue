@@ -58,8 +58,9 @@
 
 <script setup lang="ts">
 import { LucideChefHat, LucideSearch } from 'lucide-vue-next';
+import MenuItem from '../../components/public/MenuItem.vue';
+import { Button } from '../../components/ui/button';
 
-// RELYING ON NUXT AUTO-IMPORTS for Button and MenuItem
 const route = useRoute();
 const slug = route.params.slug as string;
 

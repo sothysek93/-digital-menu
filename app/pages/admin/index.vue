@@ -166,6 +166,17 @@ import {
   LucideLayoutDashboard, LucidePlus, LucideImage, LucideLoader2, 
   LucidePencil, LucideTrash2, LucideGlobe, LucideExternalLink 
 } from 'lucide-vue-next';
+import { Card, CardContent } from '../../components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Checkbox } from '../../components/ui/checkbox';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogDescription, DialogFooter, DialogTrigger 
+} from '../../components/ui/dialog';
 
 // Use proper Nuxt middleware
 definePageMeta({ middleware: 'auth' });
