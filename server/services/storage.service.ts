@@ -8,13 +8,13 @@ export class StorageService {
     return `PUT_DIRECT_TO_API_/${key}`;
   }
 
-  static async uploadDirect(event: H3Event, restaurantId: string, fileName: string, buffer: Buffer) {
+  static async uploadDirect(event: H3Event, restaurantId: string, fileName: string, data: Uint8Array) {
     const key = `menus/${restaurantId}/${fileName}`;
     const { BUCKET } = event.context.cloudflare.env;
     
-    await BUCKET.put(key, buffer, {
+    await BUCKET.put(key, data, {
       httpMetadata: {
-        contentType: 'image/jpeg', // Or detect from extension
+        contentType: 'image/jpeg',
       }
     });
 
