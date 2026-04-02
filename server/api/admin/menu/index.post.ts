@@ -1,4 +1,4 @@
-import { MenuService } from '../../services/menu.service';
+import { MenuService } from '../../../services/menu.service';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
