@@ -19,7 +19,7 @@ export class MenuService {
     const rows = await query(event, `
       SELECT m.* FROM menu_items m
       JOIN restaurants r ON m.restaurant_id = r.id
-      WHERE r.slug = ?
+      WHERE LOWER(r.slug) = LOWER(?)
     `, [slug]);
     return rows;
   }
