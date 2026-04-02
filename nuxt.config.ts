@@ -17,6 +17,9 @@ export default defineNuxtConfig({
       'autoprefixer': {}
     }
   },
+  routeRules: {
+    '/**': { isr: false, prerender: false }
+  },
   future: {
     compatibilityVersion: 4
   }

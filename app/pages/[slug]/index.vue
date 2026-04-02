@@ -54,7 +54,8 @@ import MenuItem from '../../components/public/MenuItem.vue';
 const route = useRoute();
 const slug = route.params.slug as string;
 
-const { data: menuItems, pending } = await useAsyncData(`menu-${slug}`, () => $fetch(`/api/public/menu?slug=${slug}`), {
-  default: () => []
+const { data: menuItems, pending } = await useFetch(`/api/public/menu?slug=${slug}`, {
+  key: `menu-${slug}`,
+  transform: (data: any) => data || []
 });
 </script>
