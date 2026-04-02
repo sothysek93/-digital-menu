@@ -13,8 +13,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' });
   }
   
+  // Explicitly sign the full identity into the JWT payload
+  // so the frontend middleware can decode it locally during refresh.
   const token = await AuthService.sign(event, { 
     id: user.id, 
+    name: user.name, // INCLUDED NAME
     email: user.email,
     slug: user.slug 
   });
