@@ -1,0 +1,12 @@
+name = "digital-menu"
+compatibility_date = "2024-04-01"
+pages_build_output_dir = ".output/public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "digital-menu-db"
+database_id = "aa51aeaa-ff7f-4937-a1d5-d496394130d3"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "digital-menu-assets"
