@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     });
   }
   
-  const uploadUrl = await StorageService.getUploadUrl(restaurantId, fileName);
+  const uploadUrl = await StorageService.getUploadUrl(event, restaurantId, fileName);
   return { 
     uploadUrl,
     key: `menus/${restaurantId}/${fileName}`

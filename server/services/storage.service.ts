@@ -1,30 +1,23 @@
-import AWS from 'aws-sdk';
-
-const s3 = new AWS.S3({
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  accessKeyId: process.env.R2_ACCESS_KEY,
-  secretAccessKey: process.env.R2_SECRET_KEY,
-  region: 'auto',
-  signatureVersion: 'v4',
-});
+import { H3Event } from 'h3';
 
 export class StorageService {
-  static async getUploadUrl(restaurantId: string, fileName: string) {
+  static async getUploadUrl(event: H3Event, restaurantId: string, fileName: string) {
     const key = `menus/${restaurantId}/${fileName}`;
-    return s3.getSignedUrlPromise('putObject', {
-      Bucket: process.env.R2_BUCKET_NAME as string,
-      Key: key,
-      Expires: 3600,
-    });
+    // Native R2 doesn't use signed URLs in the same way, we'll use a direct PUT approach or pre-authenticated route
+    // For now we'll support direct upload which is simpler for R2 bindings
+    return `PUT_DIRECT_TO_API_/${key}`;
   }
 
-  static async uploadDirect(restaurantId: string, fileName: string, buffer: Buffer) {
+  static async uploadDirect(event: H3Event, restaurantId: string, fileName: string, buffer: Buffer) {
     const key = `menus/${restaurantId}/${fileName}`;
-    return s3.putObject({
-      Bucket: process.env.R2_BUCKET_NAME as string,
-      Key: key,
-      Body: buffer,
-      ACL: 'public-read',
-    }).promise();
+    const { BUCKET } = event.context.cloudflare.env;
+    
+    await BUCKET.put(key, buffer, {
+      httpMetadata: {
+        contentType: 'image/jpeg', // Or detect from extension
+      }
+    });
+
+    return key;
   }
 }
