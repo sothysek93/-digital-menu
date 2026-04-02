@@ -27,6 +27,6 @@ export default defineEventHandler(async (event) => {
 
   return { 
     key, 
-    url: `https://menus.tipsha.com/${key}` 
+    url: `https://pub-766efb15a96545b4bbbd0a80d0e3c197.r2.dev/${key}` 
   };
 });
