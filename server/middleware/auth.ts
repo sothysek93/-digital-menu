@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
     }
     
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1] || '';
     const user = await AuthService.verify(event, token);
     
     if (!user) {
