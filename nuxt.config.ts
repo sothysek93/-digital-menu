@@ -3,12 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   nitro: {
-    preset: 'cloudflare-pages',
-    output: {
-      dir: '.output',
-      serverDir: '.output/server',
-      publicDir: '.output/public'
-    }
+    preset: 'cloudflare-pages'
   },
   css: ['~/assets/css/main.css'],
   modules: ['shadcn-nuxt'],
