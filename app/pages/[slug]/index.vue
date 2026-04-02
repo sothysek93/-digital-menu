@@ -50,6 +50,8 @@
 <script setup lang="ts">
 import { LucideChefHat, LucideSearch } from 'lucide-vue-next';
 import MenuItem from '../../components/public/MenuItem.vue';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const route = useRoute();
 const slug = route.params.slug as string;

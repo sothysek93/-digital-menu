@@ -73,4 +73,7 @@
 
 <script setup>
 import { LucideZap, LucideImage, LucideTerminal } from 'lucide-vue-next';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 </script>
