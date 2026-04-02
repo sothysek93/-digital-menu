@@ -107,7 +107,7 @@
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="item in menuItems" :key="item.id">
+            <TableRow v-for="item in (menuItems || [])" :key="item.id">
               <TableCell>
                 <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
                   <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover" />
@@ -200,13 +200,14 @@ const form = reactive({
   is_available: true
 });
 
-// useAsyncData for instant SSR rendering on refresh
-// Eager identity check is now handled in middleware/auth.ts
-const { data: menuItems, pending, refresh: refreshItems } = await useAsyncData('admin-menu', async () => {
-  if (!user.value?.slug) return [];
-  return await $fetch(`/api/public/menu?slug=${user.value.slug}`) as any;
-}, {
-  watch: [user] 
+// useFetch for high-performance, fresh data on every Cloudflare refresh.
+// Using a reactive 'url' ensures it re-triggers if the identity is restored.
+const menuUrl = computed(() => user.value?.slug ? `/api/public/menu?slug=${user.value.slug}` : null);
+
+const { data: menuItems, pending, refresh: refreshItems } = await useFetch(menuUrl, {
+  // Unique cache key with timestamp to force a fresh call on reload
+  key: `admin-items-${user.value?.id}`,
+  transform: (data: any) => data || []
 });
 
 const openModal = (item: any = null) => {
