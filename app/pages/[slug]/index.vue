@@ -187,13 +187,18 @@
                 <LucideCheck class="w-5 h-5" />
              </div>
              <div class="text-left">
-                <h2 class="text-sm font-bold uppercase tracking-tight">Active Track</h2>
+                <h2 class="text-xs font-bold uppercase tracking-tight">Active Track</h2>
                 <p class="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Table {{ table || '?' }} Queue</p>
              </div>
           </div>
-          <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg" @click="orderSuccess = false">
-             <LucideXCircle class="w-4 h-4 text-muted-foreground" />
-          </Button>
+          <div class="flex items-center gap-1">
+            <Button v-if="activeOrders.length > 0" variant="ghost" class="h-8 px-3 text-[9px] font-bold uppercase text-muted-foreground hover:text-destructive transition-colors" @click="clearHistory">
+               Clear History
+            </Button>
+            <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg" @click="orderSuccess = false">
+               <LucideXCircle class="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </div>
         </div>
         
         <div class="flex-1 overflow-y-auto space-y-6 py-4 scrollbar-hide">
@@ -202,13 +207,16 @@
               <p class="text-[10px] font-bold text-muted-foreground mt-4 uppercase animate-pulse">Syncing tickets...</p>
            </div>
            
-           <div v-for="order in activeOrders" :key="order.id" class="space-y-3 bg-muted/30 rounded-lg p-5 border border-border/50 text-left">
+           <div v-for="order in activeOrders" :key="order.id" class="space-y-3 bg-muted/30 rounded-lg p-5 border border-border/50 text-left relative overflow-hidden group">
               <div class="flex items-center justify-between">
                  <div class="flex items-center gap-2">
                     <span class="text-[9px] font-mono font-bold px-2 py-0.5 bg-background border border-border rounded-md">#{{ order.id.slice(-6).toUpperCase() }}</span>
                     <Badge :variant="getStatusVariant(order.status)" class="rounded-md text-[8px] font-bold uppercase h-5 px-1.5">{{ order.status }}</Badge>
                  </div>
-                 <span class="text-[9px] font-bold text-muted-foreground">{{ formatTime(order.created_at) }}</span>
+                 <div class="flex items-center gap-1.5">
+                    <LucideClock class="w-3 h-3 text-muted-foreground/40" />
+                    <span class="text-[9px] font-bold text-muted-foreground">{{ formatTime(order.created_at) }}</span>
+                 </div>
               </div>
 
               <div class="space-y-1.5 pt-2">
@@ -218,14 +226,19 @@
                  </div>
               </div>
 
-              <div class="pt-3 border-t border-border/30 flex items-center justify-between">
-                 <span class="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Order Value</span>
+              <div class="pt-3 border-t border-border/40 flex items-center justify-between">
+                 <span class="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Ticket Total</span>
                  <span class="text-[11px] font-bold text-foreground font-mono">${{ order.total_price?.toFixed(2) }}</span>
               </div>
            </div>
 
-           <div v-if="!isLoadingActiveOrder && activeOrders.length === 0" class="py-12 text-center text-muted-foreground text-xs font-medium italic">
-             No active orders detected for this session.
+           <div v-if="!isLoadingActiveOrder && activeOrders.length === 0" class="py-16 text-center space-y-4">
+             <div class="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mx-auto opacity-20">
+                <LucideHistory class="w-6 h-6" />
+             </div>
+             <p class="text-muted-foreground text-[10px] font-bold uppercase tracking-widest max-w-[150px] mx-auto leading-relaxed">
+               History is clear. Place a new order to track status.
+             </p>
            </div>
         </div>
 
@@ -236,11 +249,11 @@
     </div>
 
     <!-- Clean Minimalist Footer -->
-    <footer class="py-10 border-t border-border text-center space-y-4 bg-muted/10">
+    <footer class="py-10 border-t border-border text-center space-y-4 bg-muted/5">
       <div v-if="data?.shop?.logo_url" class="w-8 h-8 rounded-lg overflow-hidden opacity-20 mx-auto grayscale">
          <img :src="data.shop.logo_url" class="w-full h-full object-cover" />
       </div>
-      <div class="space-y-1 opacity-40">
+      <div class="space-y-1 opacity-30">
         <p class="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.4em]">Powered by</p>
         <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{{ data?.shop?.name || 'System' }}</p>
       </div>
@@ -252,7 +265,7 @@
 import { 
   ChefHat as LucideChefHat, Search as LucideSearch, Plus as LucidePlus, ShoppingCart as LucideShoppingCart,
   Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo,
-  Check as LucideCheck, Eye as LucideEye, XCircle as LucideXCircle
+  Check as LucideCheck, Eye as LucideEye, XCircle as LucideXCircle, Clock as LucideClock, History as LucideHistory
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Card } from '~/components/ui';
@@ -298,14 +311,18 @@ const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (it
 
 // Logic: Fetch Active Order Statuses
 const fetchActiveOrders = async () => {
-    if (persistedOrderIds.value.length === 0) return;
+    if (persistedOrderIds.value.length === 0) {
+        activeOrders.value = [];
+        return;
+    }
     isLoadingActiveOrder.value = true;
     try {
         const results = await Promise.all(
             persistedOrderIds.value.map(id => $fetch(`/api/public/orders/${id}`).catch(() => null))
         );
-        // Filter out nulls and sort by date (newest first)
-        activeOrders.value = (results.filter(o => o !== null) as any[]).sort((a,b) => 
+        // Sync the IDs in case some were purged/not found
+        const validOrders = results.filter(o => o !== null) as any[];
+        activeOrders.value = validOrders.sort((a,b) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
     } catch (e) {
@@ -335,8 +352,21 @@ onMounted(() => {
       try {
         const parsed = JSON.parse(savedIds);
         if (Array.isArray(parsed)) {
+            // Auto-clear logic: Filter out orders older than 24 hours
+            const now = new Date().getTime();
+            const oneDay = 24 * 60 * 60 * 1000;
+            // Note: We don't have the creation date in the ID, but we will filter after fetch
             persistedOrderIds.value = parsed;
-            fetchActiveOrders();
+            fetchActiveOrders().then(() => {
+                // If after fetch, an order is older than 24h, we could remove it from persistedOrderIds
+                const validIds = activeOrders.value
+                    .filter(o => now - new Date(o.created_at).getTime() < oneDay)
+                    .map(o => o.id);
+                if (validIds.length !== persistedOrderIds.value.length) {
+                    persistedOrderIds.value = validIds;
+                    localStorage.setItem('active_order_ids_v1', JSON.stringify(validIds));
+                }
+            });
         }
       } catch (e) { console.error('Ids hydration failed', e); }
     }
@@ -346,7 +376,7 @@ onMounted(() => {
         if (persistedOrderIds.value.length > 0 && !isLoadingActiveOrder.value) {
             fetchActiveOrders();
         }
-    }, 8000);
+    }, 15000); // 15s to be more gentle
   }
 });
 
@@ -444,6 +474,15 @@ const viewRecentOrder = () => {
     orderSuccess.value = true;
 };
 
+const clearHistory = () => {
+    persistedOrderIds.value = [];
+    activeOrders.value = [];
+    if (process.client) {
+        localStorage.removeItem('active_order_ids_v1');
+    }
+    toast.info('Tracking Cleared', { description: 'History has been reset.' });
+};
+
 const getStatusVariant = (status: string) => {
     const map: Record<string, string> = {
         'pending': 'destructive',
@@ -457,7 +496,12 @@ const getStatusVariant = (status: string) => {
 
 const formatTime = (dateStr: string) => {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+  // Force parsing as UTC if no timezone is provided to handle UTC+7 correctly in browser
+  let isoStr = dateStr;
+  if (!isoStr.includes('Z') && !isoStr.includes('+')) {
+      isoStr = dateStr.replace(' ', 'T') + 'Z';
+  }
+  const date = new Date(isoStr);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 </script>
