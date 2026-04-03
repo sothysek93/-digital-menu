@@ -21,7 +21,7 @@
       </div>
       
       <!-- Minimalist Tracking Button -->
-      <div v-if="persistedOrderId">
+      <div v-if="persistedOrderIds.length > 0">
          <Button variant="outline" size="sm" class="h-8 rounded-lg text-[10px] font-bold uppercase px-3 gap-2" @click="viewRecentOrder">
             <LucideLoader2 v-if="isLoadingActiveOrder" class="w-3 h-3 animate-spin text-primary" />
             <LucideEye v-else class="w-3 h-3" />
@@ -178,47 +178,71 @@
       </SheetContent>
     </Sheet>
 
-    <!-- Success Overlay Card -->
+    <!-- Success / Tracking Overlay -->
     <div v-if="orderSuccess" class="fixed inset-0 z-[150] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-      <Card class="max-w-sm w-full p-8 text-center space-y-6 shadow-2xl border-border">
-        <div class="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center text-white shadow-lg shadow-emerald-500/10">
-          <LucideCheck class="w-8 h-8" />
+      <Card class="max-w-md w-full p-8 text-center space-y-6 shadow-2xl border-border max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between pb-4 border-b border-border">
+          <div class="flex items-center gap-3">
+             <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+                <LucideCheck class="w-5 h-5" />
+             </div>
+             <div class="text-left">
+                <h2 class="text-sm font-bold uppercase tracking-tight">Active Track</h2>
+                <p class="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Table {{ table || '?' }} Queue</p>
+             </div>
+          </div>
+          <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg" @click="orderSuccess = false">
+             <LucideXCircle class="w-4 h-4 text-muted-foreground" />
+          </Button>
         </div>
         
-        <div class="space-y-1.5">
-          <h2 class="text-2xl font-bold tracking-tight uppercase">Order Received</h2>
-          <div class="flex items-center justify-center gap-2">
-             <Badge v-if="activeOrder" variant="secondary" class="rounded-full text-[9px] font-bold uppercase h-5">
-               {{ activeOrder.status }}
-             </Badge>
-             <span v-if="activeOrder" class="text-[9px] font-mono text-muted-foreground border border-border px-2 py-0.5 rounded-full">#{{ activeOrder.id.slice(-6).toUpperCase() }}</span>
-          </div>
-          <p class="text-muted-foreground text-xs font-medium leading-relaxed pt-2">
-            Table #{{ orderForm.table_number || activeOrder?.table_number }} ticket is now in our kitchen queue.
-          </p>
-        </div>
+        <div class="flex-1 overflow-y-auto space-y-6 py-4 scrollbar-hide">
+           <div v-if="activeOrders.length === 0 && isLoadingActiveOrder" class="py-12 flex flex-col items-center">
+              <LucideLoader2 class="w-8 h-8 animate-spin text-muted-foreground/20" />
+              <p class="text-[10px] font-bold text-muted-foreground mt-4 uppercase animate-pulse">Syncing tickets...</p>
+           </div>
+           
+           <div v-for="order in activeOrders" :key="order.id" class="space-y-3 bg-muted/30 rounded-lg p-5 border border-border/50 text-left">
+              <div class="flex items-center justify-between">
+                 <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-mono font-bold px-2 py-0.5 bg-background border border-border rounded-md">#{{ order.id.slice(-6).toUpperCase() }}</span>
+                    <Badge :variant="getStatusVariant(order.status)" class="rounded-md text-[8px] font-bold uppercase h-5 px-1.5">{{ order.status }}</Badge>
+                 </div>
+                 <span class="text-[9px] font-bold text-muted-foreground">{{ formatTime(order.created_at) }}</span>
+              </div>
 
-        <div v-if="activeOrder?.items" class="bg-muted/50 rounded-xl p-4 space-y-3 max-h-[25vh] overflow-y-auto text-left border border-border/50">
-           <div v-for="item in activeOrder.items" :key="item.id" class="flex items-center justify-between text-[10px] font-medium border-b border-border/50 pb-2 last:border-0 last:pb-0">
-              <span class="text-foreground uppercase truncate pr-4">{{ item.quantity }}x {{ item.item_name }}</span>
-              <span class="text-muted-foreground font-mono shrink-0">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
+              <div class="space-y-1.5 pt-2">
+                 <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between text-[11px] font-medium text-foreground">
+                    <span class="truncate pr-4 uppercase tracking-tighter opacity-80"><span class="font-bold">×{{ item.quantity }}</span> {{ item.item_name }}</span>
+                    <span class="font-mono text-[9px] opacity-40 shrink-0">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
+                 </div>
+              </div>
+
+              <div class="pt-3 border-t border-border/30 flex items-center justify-between">
+                 <span class="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Order Value</span>
+                 <span class="text-[11px] font-bold text-foreground font-mono">${{ order.total_price?.toFixed(2) }}</span>
+              </div>
+           </div>
+
+           <div v-if="!isLoadingActiveOrder && activeOrders.length === 0" class="py-12 text-center text-muted-foreground text-xs font-medium italic">
+             No active orders detected for this session.
            </div>
         </div>
 
-        <Button class="w-full h-11 rounded-lg bg-foreground text-background font-bold uppercase tracking-widest text-[10px]" @click="orderSuccess = false">
+        <Button class="w-full h-11 rounded-lg bg-foreground text-background font-bold uppercase tracking-widest text-[10px] mt-4" @click="orderSuccess = false">
            Return to Menu
         </Button>
       </Card>
     </div>
 
     <!-- Clean Minimalist Footer -->
-    <footer class="py-12 border-t border-border text-center space-y-4">
-      <div v-if="data?.shop?.logo_url" class="w-8 h-8 rounded-lg overflow-hidden opacity-30 mx-auto grayscale">
+    <footer class="py-10 border-t border-border text-center space-y-4 bg-muted/10">
+      <div v-if="data?.shop?.logo_url" class="w-8 h-8 rounded-lg overflow-hidden opacity-20 mx-auto grayscale">
          <img :src="data.shop.logo_url" class="w-full h-full object-cover" />
       </div>
-      <div class="space-y-1">
-        <p class="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-[0.4em]">Powered by</p>
-        <p class="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest leading-none">{{ data?.shop?.name || 'System' }}</p>
+      <div class="space-y-1 opacity-40">
+        <p class="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.4em]">Powered by</p>
+        <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{{ data?.shop?.name || 'System' }}</p>
       </div>
     </footer>
   </div>
@@ -246,10 +270,10 @@ const isSheetOpen = ref(false);
 const orderSuccess = ref(false);
 const isSubmitting = ref(false);
 const activeCategory = ref('');
-const activeOrder = ref<any>(null);
+const activeOrders = ref<any[]>([]);
 const isLoadingActiveOrder = ref(false);
 const cart = useState<any[]>('menu-cart', () => []);
-const persistedOrderId = useState<string | null>('active-order-id', () => null);
+const persistedOrderIds = useState<string[]>('active-order-ids', () => []);
 
 // Fetch Menu Data
 const { data, pending } = await useFetch<any>(`/api/public/menu?slug=${slug}` as any, {
@@ -272,22 +296,20 @@ const groupedMenu = computed(() => {
 const cartTotalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
 const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
 
-// Logic: Fetch Active Order Status
-const fetchActiveOrder = async () => {
-    if (!persistedOrderId.value) return;
+// Logic: Fetch Active Order Statuses
+const fetchActiveOrders = async () => {
+    if (persistedOrderIds.value.length === 0) return;
     isLoadingActiveOrder.value = true;
     try {
-        const order = await $fetch(`/api/public/orders/${persistedOrderId.value}`);
-        activeOrder.value = order;
-        // If order is completed or cancelled, we don't need to track it as heavily
-        if (order && ['completed', 'cancelled'].includes(order.status)) {
-            // Keep it in state so user can see last order, but maybe stop polling?
-        }
+        const results = await Promise.all(
+            persistedOrderIds.value.map(id => $fetch(`/api/public/orders/${id}`).catch(() => null))
+        );
+        // Filter out nulls and sort by date (newest first)
+        activeOrders.value = (results.filter(o => o !== null) as any[]).sort((a,b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
     } catch (e) {
-        console.error('Track order failed', e);
-        // Clear if not found to stop spinning forever
-        persistedOrderId.value = null;
-        if (process.client) localStorage.removeItem('last_order_id');
+        console.error('Track orders failed', e);
     } finally {
         isLoadingActiveOrder.value = false;
     }
@@ -307,18 +329,24 @@ onMounted(() => {
       } catch (e) { console.error('Basket hydration failed', e); }
     }
 
-    // 2. Hydrate Order Tracking
-    const lastId = localStorage.getItem('last_order_id');
-    if (lastId) {
-      persistedOrderId.value = lastId;
-      fetchActiveOrder();
-      // Start Polling for status updates
-      pollTimer = setInterval(() => {
-        if (persistedOrderId.value && !isLoadingActiveOrder.value) {
-            fetchActiveOrder();
+    // 2. Hydrate Order Tracking (Array-based)
+    const savedIds = localStorage.getItem('active_order_ids_v1');
+    if (savedIds) {
+      try {
+        const parsed = JSON.parse(savedIds);
+        if (Array.isArray(parsed)) {
+            persistedOrderIds.value = parsed;
+            fetchActiveOrders();
         }
-      }, 10000);
+      } catch (e) { console.error('Ids hydration failed', e); }
     }
+
+    // Start Polling for status updates if we have active IDs
+    pollTimer = setInterval(() => {
+        if (persistedOrderIds.value.length > 0 && !isLoadingActiveOrder.value) {
+            fetchActiveOrders();
+        }
+    }, 8000);
   }
 });
 
@@ -392,25 +420,44 @@ const submitOrder = async () => {
     }) as any;
 
     if (res.id) {
-        localStorage.setItem('last_order_id', res.id);
-        persistedOrderId.value = res.id;
-        fetchActiveOrder();
+        persistedOrderIds.value.push(res.id);
+        if (process.client) {
+            localStorage.setItem('active_order_ids_v1', JSON.stringify(persistedOrderIds.value));
+        }
+        fetchActiveOrders();
     }
 
-    toast.success('Order Sent', { description: 'Kitchen notified.' });
+    toast.success('Ticket Sent', { description: 'Our chef is notified.' });
     orderSuccess.value = true;
     isSheetOpen.value = false;
     cart.value = [];
     if (process.client) localStorage.removeItem(`basket_v1_${slug}`);
   } catch (e: any) {
-    toast.error('Failed to order', { description: e.data?.message || 'Check connection.' });
+    toast.error('Dispatch failed', { description: e.data?.message || 'Check connection.' });
   } finally {
     isSubmitting.value = false;
   }
 };
 
 const viewRecentOrder = () => {
-    fetchActiveOrder();
+    fetchActiveOrders();
     orderSuccess.value = true;
+};
+
+const getStatusVariant = (status: string) => {
+    const map: Record<string, string> = {
+        'pending': 'destructive',
+        'preparing': 'default',
+        'served': 'secondary',
+        'completed': 'outline',
+        'cancelled': 'outline'
+    };
+    return (map[status] || 'secondary') as any;
+};
+
+const formatTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 </script>
