@@ -5,6 +5,8 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "dev:remote": "npx wrangler dev . --remote --proxy 3000 --d1 DB --r2 BUCKET",
+    "dev:full": "npx wrangler d1 execute digital-menu-db --local --file=schema.sql --persist-to ./.wrangler/state && npx wrangler pages dev public --proxy 3000 --d1 DB --r2 BUCKET --persist-to ./.wrangler/state",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

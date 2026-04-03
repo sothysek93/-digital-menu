@@ -73,23 +73,79 @@
 
       <!-- Location/Contact Tab -->
       <TabsContent value="location" class="animate-in fade-in slide-in-from-bottom-1 duration-400">
-        <Card class="border border-border shadow-none rounded-lg p-8 bg-background space-y-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="space-y-1.5">
-              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Contact Line</Label>
-              <Input v-model="form.phone" placeholder="+12..." class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
-            </div>
-            <div class="space-y-1.5">
-              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Open Hours</Label>
-              <Input v-model="form.business_hours" placeholder="Sun-Fri: 11 AM - 10 PM" class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
-            </div>
-          </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card class="border border-border shadow-none rounded-lg p-8 bg-background space-y-8">
+            <div class="space-y-6">
+              <div class="space-y-1">
+                 <h3 class="text-lg font-bold tracking-tight text-foreground">Contact & Service</h3>
+                 <p class="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">How customers reach this location.</p>
+              </div>
+              
+              <div class="space-y-5">
+                <div class="space-y-1.5">
+                  <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Contact Line</Label>
+                  <div class="relative">
+                     <LucidePhone class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                     <Input v-model="form.phone" placeholder="+12..." class="rounded-lg h-11 border-input bg-background pl-10 text-xs font-bold" />
+                  </div>
+                </div>
 
-          <div class="space-y-1.5">
-            <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Physical Address</Label>
-            <Input v-model="form.address" placeholder="123 Flavor Ave, Food Town" class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
-          </div>
-        </Card>
+                <div class="space-y-1.5">
+                  <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Physical Address</Label>
+                  <div class="relative">
+                     <LucideMapPin class="absolute left-3 top-3 w-3.5 h-3.5 text-muted-foreground" />
+                     <textarea 
+                        v-model="form.address" 
+                        class="flex min-h-[100px] w-full rounded-lg border border-input bg-background pl-10 pr-3 py-3 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/40"
+                        placeholder="123 Flavor Ave, Food Town"
+                     ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card class="border border-border shadow-none rounded-lg p-8 bg-background space-y-8">
+            <div class="space-y-6">
+               <div class="space-y-1">
+                  <h3 class="text-lg font-bold tracking-tight text-foreground">Weekly Schedule</h3>
+                  <p class="text-muted-foreground text-[10px] font-medium uppercase tracking-wider text-emerald-500 font-bold">Manage availability</p>
+               </div>
+
+               <div class="space-y-4">
+                  <div v-for="day in days" :key="day" class="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
+                     <div class="w-20">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-foreground">{{ day }}</span>
+                     </div>
+                     
+                     <div class="flex-1 flex items-center gap-2">
+                        <template v-if="!schedule[day].closed">
+                           <input 
+                              type="time" 
+                              v-model="schedule[day].open" 
+                              class="bg-muted/50 border border-border rounded-md px-2 py-1 text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary w-24" 
+                           />
+                           <span class="text-muted-foreground text-[10px] font-bold">to</span>
+                           <input 
+                              type="time" 
+                              v-model="schedule[day].close" 
+                              class="bg-muted/50 border border-border rounded-md px-2 py-1 text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary w-24" 
+                           />
+                        </template>
+                        <div v-else class="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 italic py-1">
+                           Store is Closed
+                        </div>
+                     </div>
+
+                     <div class="flex items-center gap-2">
+                        <Label class="text-[9px] font-bold uppercase text-muted-foreground tracking-tighter">Closed</Label>
+                        <Checkbox v-model:checked="schedule[day].closed" class="rounded-sm w-4 h-4" />
+                     </div>
+                  </div>
+               </div>
+            </div>
+          </Card>
+        </div>
       </TabsContent>
 
       <!-- QR Engine Tab -->
@@ -156,7 +212,8 @@
 import { 
   Save as LucideSave, Image as LucideImage, Loader2 as LucideLoader2, 
   Store as LucideStore, AlertCircle as LucideAlertCircle, QrCode as LucideQrCode,
-  Printer as LucidePrinter, Hash as LucideHash
+  Printer as LucidePrinter, Hash as LucideHash, Phone as LucidePhone,
+  MapPin as LucideMapPin
 } from 'lucide-vue-next';
 import { Card } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
@@ -164,6 +221,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui';
 import { Separator } from '~/components/ui/separator';
+import { Checkbox } from '~/components/ui/checkbox';
 import { toast } from 'vue-sonner';
 
 definePageMeta({ layout: 'admin' });
@@ -173,6 +231,17 @@ const currentShopId = useState<string | null>('currentShopId');
 const logoInput = ref<HTMLInputElement | null>(null);
 const isSaving = ref(false);
 const qrTable = ref('');
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const schedule = reactive<Record<string, any>>({
+  Monday: { open: '09:00', close: '22:00', closed: false },
+  Tuesday: { open: '09:00', close: '22:00', closed: false },
+  Wednesday: { open: '09:00', close: '22:00', closed: false },
+  Thursday: { open: '09:00', close: '22:00', closed: false },
+  Friday: { open: '09:00', close: '22:00', closed: false },
+  Saturday: { open: '10:00', close: '23:00', closed: false },
+  Sunday: { open: '09:00', close: '22:00', closed: false },
+});
 
 interface Shop {
   id: string;
@@ -197,11 +266,11 @@ const form = reactive({
   is_active: true
 });
 
-const { data: shops, pending, refresh } = await useFetch<Shop[]>('/api/admin/shops', {
+const { data: shopsResult, pending, refresh } = await useFetch<any>('/api/admin/shops', {
   headers: { Authorization: `Bearer ${token.value}` }
 });
 
-const currentShop = computed(() => shops.value?.find(s => s.id === currentShopId.value));
+const currentShop = computed(() => (shopsResult.value?.items as Shop[])?.find(s => s.id === currentShopId.value));
 
 const publicUrl = computed(() => {
   if (!currentShop.value) return '';
@@ -213,7 +282,7 @@ const qrImageUrl = computed(() => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(publicUrl.value)}&bgcolor=FFFFFF&color=000000&margin=10`;
 });
 
-// Sync form with current shop
+// Sync form and schedule with current shop
 watch(() => currentShop.value, (newShop) => {
   if (newShop) {
     Object.assign(form, {
@@ -225,6 +294,16 @@ watch(() => currentShop.value, (newShop) => {
       description: newShop.description || '',
       business_hours: newShop.business_hours || ''
     });
+
+    // Try to parse schedule JSON
+    if (newShop.business_hours) {
+       try {
+          const parsed = JSON.parse(newShop.business_hours);
+          Object.assign(schedule, parsed);
+       } catch (e) {
+          // Keep defaults if not JSON
+       }
+    }
   }
 }, { immediate: true });
 
@@ -260,6 +339,10 @@ const uploadLogo = async (event: any) => {
 const saveSettings = async () => {
   if (!currentShopId.value) return;
   isSaving.value = true;
+  
+  // Pack schedule into form
+  form.business_hours = JSON.stringify(schedule);
+
   try {
     await $fetch(`/api/admin/shops/${currentShopId.value}`, {
       method: 'PUT',
@@ -283,17 +366,25 @@ const printQR = () => {
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`
-    <div style="text-align: center; font-family: sans-serif; padding: 40px; border: 4px solid #000; border-radius: 40px; display: inline-block;">
-      <h1 style="text-transform: uppercase; letter-spacing: 2px; font-weight: 900; margin-bottom: 0;">${form.name}</h1>
-      <p style="color: #666; font-size: 14px; margin-top: 5px; font-weight: bold; letter-spacing: 1px;">DIGITAL MENU</p>
-      <img src="${qrImageUrl.value}" style="width: 400px; margin: 20px auto; display: block;" />
-      <div style="background: #000; color: #fff; padding: 10px 40px; border-radius: 20px; display: inline-block; font-size: 32px; font-weight: 900; margin-top: 20px;">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+      body { font-family: 'Outfit', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    </style>
+    <div style="text-align: center; padding: 60px; border: 8px solid #000; border-radius: 60px; display: inline-block;">
+      <h1 style="text-transform: uppercase; letter-spacing: 4px; font-size: 48px; font-weight: 900; margin: 0 0 10px 0;">${form.name}</h1>
+      <p style="color: #666; font-size: 18px; margin: 0; font-weight: 700; letter-spacing: 3px; opacity: 0.5;">DIGITAL MENU</p>
+      <div style="margin: 40px auto; padding: 20px; background: #fff; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
+         <img src="${qrImageUrl.value}" style="width: 350px; display: block;" />
+      </div>
+      <div style="background: #000; color: #fff; padding: 15px 50px; border-radius: 25px; display: inline-block; font-size: 42px; font-weight: 900; margin-top: 20px; letter-spacing: -1px;">
         TABLE ${qrTable.value || 'GUEST'}
       </div>
-      <p style="color: #888; font-size: 14px; margin-top: 20px; font-style: italic;">Scan to open menu and order from your table</p>
+      <p style="color: #000; font-size: 16px; margin-top: 30px; font-weight: 700; opacity: 0.8;">SCAN TO BROWSE & ORDER</p>
     </div>
   `);
   win.document.close();
-  win.print();
+  setTimeout(() => {
+    win.print();
+  }, 500);
 };
 </script>

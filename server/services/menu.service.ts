@@ -28,13 +28,21 @@ export class MenuService {
     return rows;
   }
 
-  static async getByShopId(event: H3Event, shopId: string) {
-    return await query(event, `
+  static async getByShopId(event: H3Event, shopId: string, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+
+    const items = await query(event, `
       SELECT m.*, c.name as category_name FROM menu_items m
       JOIN categories c ON m.category_id = c.id
       WHERE m.shop_id = ?
       ORDER BY c.order_index ASC, m.order_index ASC
-    `, [shopId]);
+      LIMIT ? OFFSET ?
+    `, [shopId, limit, offset]);
+
+    const countRows: any[] = await query(event, 'SELECT COUNT(*) as total FROM menu_items WHERE shop_id = ?', [shopId]);
+    const total = countRows[0]?.total || 0;
+
+    return { items, total };
   }
 
   static async create(event: H3Event, item: Omit<MenuItem, 'id'>) {

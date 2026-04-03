@@ -19,10 +19,10 @@
           <div v-if="pendingShops" class="h-10 bg-muted animate-pulse rounded-lg border border-border"></div>
           <Select v-else :model-value="currentShopId || ''" @update:model-value="onShopChange">
             <SelectTrigger class="w-full bg-background border-border h-10 rounded-lg text-xs font-medium px-3 hover:bg-accent transition-colors">
-              <SelectValue :placeholder="shops?.length ? 'Selecting...' : 'No Locations'" />
+              <SelectValue :placeholder="shops?.items?.length ? 'Selecting...' : 'No Locations'" />
             </SelectTrigger>
             <SelectContent class="rounded-lg border-border bg-popover">
-              <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium rounded-md m-1 py-2 pr-2 pl-8">
+              <SelectItem v-for="shop in (shops?.items as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium rounded-md m-1 py-2 pr-2 pl-8">
                 {{ shop.name }}
               </SelectItem>
               <SelectSeparator class="bg-border" />
@@ -81,7 +81,7 @@
         </div>
         <h2 class="text-xs font-bold uppercase tracking-wider text-foreground">Admin</h2>
       </div>
-      <Sheet>
+      <Sheet v-model:open="isMobileMenuOpen">
         <SheetTrigger as-child>
           <Button variant="outline" size="icon" class="rounded-lg h-9 w-9">
             <LucideMenu class="w-4 h-4" />
@@ -96,7 +96,7 @@
                     <SelectValue placeholder="Selecting..." />
                   </SelectTrigger>
                   <SelectContent class="rounded-lg border-border bg-popover">
-                    <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium py-2.5 px-4 rounded-md m-1">
+                    <SelectItem v-for="shop in (shops?.items as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium py-2.5 px-4 rounded-md m-1">
                       {{ shop.name }}
                     </SelectItem>
                   </SelectContent>
@@ -110,6 +110,7 @@
                   variant="ghost"
                   class="w-full justify-start h-11 rounded-lg px-4 gap-4"
                   :class="{ 'bg-accent text-accent-foreground font-bold': route.path === link.to, 'text-muted-foreground': route.path !== link.to }"
+                  @click="isMobileMenuOpen = false"
                 >
                   <NuxtLink :to="link.to">
                     <component :is="link.icon" class="w-4 h-4" />
@@ -147,7 +148,7 @@ import {
   LayoutGrid as LucideLayoutGrid, List as LucideList, Settings as LucideSettings, 
   LogOut as LucideLogOut, LayoutDashboard as LucideLayoutDashboard, Store as LucideStore, 
   ChefHat as LucideChefHat, Menu as LucideMenu, Plus as LucidePlus,
-  ShoppingCart as LucideShoppingCart
+  ShoppingCart as LucideShoppingCart, ExternalLink as LucideExternalLink
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from '~/components/ui';
@@ -160,29 +161,42 @@ const router = useRouter();
 const user = useState<any>('user');
 const currentShopId = useState<string | null>('currentShopId', () => null);
 const token = useCookie('token');
+const isMobileMenuOpen = ref(false);
 
-const navLinks = [
-  { label: 'Incoming Orders', to: '/admin/orders', icon: LucideShoppingCart },
-  { label: 'Shop Catalog', to: '/admin', icon: LucideChefHat },
-  { label: 'Classification', to: '/admin/categories', icon: LucideList },
-  { label: 'Branch Manager', to: '/admin/shops', icon: LucideStore },
-  { label: 'Core Settings', to: '/admin/settings', icon: LucideSettings },
-];
-
-const { data: shops, pending: pendingShops } = await useFetch<any[]>('/api/admin/shops', {
+const { data: shops, pending: pendingShops } = await useFetch<any>('/api/admin/shops', {
   headers: { Authorization: `Bearer ${token.value}` }
+});
+
+const navLinks = computed(() => {
+  const currentShop = (shops.value?.items as any[])?.find(s => s.id === currentShopId.value);
+  const slug = currentShop?.slug;
+
+  const links = [
+    { label: 'Live Queue', to: '/admin/orders', icon: LucideShoppingCart },
+    { label: 'Menu Items', to: '/admin/menu', icon: LucideChefHat },
+    { label: 'Categories', to: '/admin/categories', icon: LucideList },
+    { label: 'Shops', to: '/admin/shops', icon: LucideStore },
+    { label: 'Settings', to: '/admin/settings', icon: LucideSettings },
+  ];
+
+  // If we have a slug, add a "Live View" link at the bottom
+  if (slug) {
+    links.push({ label: 'View Live Shop', to: `/${slug}`, icon: LucideExternalLink as any });
+  }
+
+  return links;
 });
 
 // Set default shop if none selected
 watchEffect(() => {
-  if (shops.value?.length && !currentShopId.value) {
-    currentShopId.value = (shops.value as any)[0].id;
+  if (shops.value?.items?.length && !currentShopId.value) {
+    currentShopId.value = (shops.value.items as any)[0].id;
   }
 });
 
 const onShopChange = (id: any) => {
   currentShopId.value = id;
-  const shopName = (shops.value as any[])?.find(s => s.id === id)?.name;
+  const shopName = (shops.value?.items as any[])?.find(s => s.id === id)?.name;
   toast.success('Location Switched', {
     description: `Currently managing "${shopName}" context.`
   });
@@ -192,6 +206,7 @@ const handleLogout = () => {
   token.value = null;
   user.value = null;
   currentShopId.value = null;
+  isMobileMenuOpen.value = false;
   toast.info('Session Terminated', {
     description: 'You have been securely signed out.'
   });

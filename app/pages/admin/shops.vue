@@ -83,45 +83,74 @@
       </DialogContent>
     </Dialog>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Card v-for="shop in shops" :key="shop.id" class="border border-border rounded-lg shadow-none overflow-hidden hover:bg-muted/5 transition-colors">
-        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle class="text-lg font-bold tracking-tight text-foreground">
-             {{ shop.name }}
-          </CardTitle>
-          <Badge :variant="shop.is_active ? 'default' : 'secondary'" class="rounded-md px-2 text-[8px] font-bold uppercase tracking-widest h-5">
-            {{ shop.is_active ? 'Live' : 'Hidden' }}
-          </Badge>
-        </CardHeader>
-        <CardContent class="space-y-5">
-          <div class="space-y-2">
-             <div class="flex items-center gap-2 text-[11px] font-mono font-bold text-foreground">
-               <LucideGlobe class="h-3.5 w-3.5 text-muted-foreground" /> 
-               <span class="opacity-40">/</span>{{ shop.slug }}
-             </div>
-             <div class="flex items-start gap-2 text-[10px] text-muted-foreground font-medium">
-               <LucideMapPin class="h-3.5 w-3.5 shrink-0" />
-               <span class="line-clamp-1 leading-tight">{{ shop.address || 'Location secret' }}</span>
-             </div>
-          </div>
+    <div class="space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card v-for="shop in shops" :key="shop.id" class="border border-border rounded-lg shadow-none overflow-hidden hover:bg-muted/5 transition-colors">
+          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle class="text-lg font-bold tracking-tight text-foreground">
+               {{ shop.name }}
+            </CardTitle>
+            <Badge :variant="shop.is_active ? 'default' : 'secondary'" class="rounded-md px-2 text-[8px] font-bold uppercase tracking-widest h-5">
+              {{ shop.is_active ? 'Live' : 'Hidden' }}
+            </Badge>
+          </CardHeader>
+          <CardContent class="space-y-5">
+            <div class="space-y-2">
+               <div class="flex items-center gap-2 text-[11px] font-mono font-bold text-foreground">
+                 <LucideGlobe class="h-3.5 w-3.5 text-muted-foreground" /> 
+                 <span class="opacity-40">/</span>{{ shop.slug }}
+               </div>
+               <div class="flex items-start gap-2 text-[10px] text-muted-foreground font-medium">
+                 <LucideMapPin class="h-3.5 w-3.5 shrink-0" />
+                 <span class="line-clamp-1 leading-tight">{{ shop.address || 'Location secret' }}</span>
+               </div>
+            </div>
 
-          <div class="flex items-center gap-2 pt-2">
-            <Button variant="outline" class="flex-1 rounded-lg h-9 text-xs font-bold border-border" @click="openModal(shop)">
-               Edit
-            </Button>
-            <Button variant="ghost" size="icon" class="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteShop(shop)">
-               <LucideTrash2 class="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div v-if="!pending && (shops?.length || 0) === 0" class="col-span-full py-24 text-center border border-dashed border-border rounded-lg bg-muted/5">
-         <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-            <LucideStore class="h-5 w-5 text-muted-foreground/30" />
-         </div>
-         <h3 class="text-sm font-bold text-foreground uppercase tracking-tight">No locations found</h3>
-         <p class="text-muted-foreground text-xs font-medium max-w-[200px] mx-auto mt-1 leading-relaxed">Start by adding your first restaurant branch context.</p>
+            <div class="flex items-center gap-2 pt-2">
+              <Button variant="outline" class="flex-1 rounded-lg h-9 text-xs font-bold border-border" @click="openModal(shop)">
+                 Edit
+              </Button>
+              <Button variant="ghost" size="icon" class="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteShop(shop)">
+                 <LucideTrash2 class="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div v-if="!pending && (shops?.length || 0) === 0" class="col-span-full py-24 text-center border border-dashed border-border rounded-lg bg-muted/5">
+           <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
+              <LucideStore class="h-5 w-5 text-muted-foreground/30" />
+           </div>
+           <h3 class="text-sm font-bold text-foreground uppercase tracking-tight">No locations found</h3>
+           <p class="text-muted-foreground text-xs font-medium max-w-[200px] mx-auto mt-1 leading-relaxed">Start by adding your first restaurant branch context.</p>
+        </div>
+      </div>
+
+      <!-- Minimalist Pagination -->
+      <div v-if="data?.total > 9" class="flex items-center justify-between px-2 py-6 border-t border-border mt-8">
+        <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+          Page {{ currentPage }} of {{ Math.ceil(data.total / 9) }}
+        </p>
+        <div class="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            class="h-9 px-4 rounded-lg text-[10px] font-bold uppercase" 
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            Previous
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            class="h-9 px-4 rounded-lg text-[10px] font-bold uppercase" 
+            :disabled="currentPage >= Math.ceil(data.total / 9)"
+            @click="currentPage++"
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   </div>
@@ -161,9 +190,14 @@ interface Shop {
   is_active: boolean;
 }
 
-const { data: shops, refresh: refreshShops, pending } = await useFetch<Shop[]>('/api/admin/shops', {
-  headers: { Authorization: `Bearer ${token.value}` }
-});
+const currentPage = ref(1);
+
+const { data, refresh: refreshShops, pending } = await useFetch<any>(() => 
+  `/api/admin/shops?page=${currentPage.value}&limit=9`, 
+  { headers: { Authorization: `Bearer ${token.value}` }, watch: [currentPage] }
+);
+
+const shops = computed(() => data.value?.items || []);
 
 const isModalOpen = ref(false);
 const isSaving = ref(false);

@@ -65,40 +65,69 @@
       </DialogContent>
     </Dialog>
 
-    <Card class="border border-border shadow-none overflow-hidden rounded-lg">
-      <Table>
-        <TableHeader class="bg-muted/50">
-          <TableRow>
-            <TableHead class="text-[10px] font-bold uppercase tracking-wider">Classification</TableHead>
-            <TableHead class="text-[10px] font-bold uppercase tracking-wider">Weight</TableHead>
-            <TableHead class="text-right text-[10px] font-bold uppercase tracking-wider">Control</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="category in categories" :key="category.id" class="hover:bg-muted/30 transition-colors">
-            <TableCell class="font-bold text-xs text-foreground tracking-tight">{{ category.name }}</TableCell>
-            <TableCell>
-              <Badge variant="secondary" class="rounded-md px-2 font-mono text-[10px] h-5">{{ category.order_index }}</Badge>
-            </TableCell>
-            <TableCell class="text-right">
-              <div class="flex justify-end gap-1">
-                <Button variant="ghost" size="icon" class="rounded-lg h-8 w-8 text-muted-foreground hover:text-foreground" @click="openModal(category)">
-                   <LucidePencil class="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" class="rounded-full h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteCategory(category)">
-                   <LucideTrash2 class="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-          <TableRow v-if="!pending && (categories?.length || 0) === 0">
-            <TableCell colspan="3" class="h-40 text-center text-muted-foreground text-xs font-medium italic">
-              {{ !currentShopId ? 'Select a store location' : 'Category list is clear' }}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </Card>
+    <div class="space-y-4">
+      <Card class="border border-border shadow-none overflow-hidden rounded-lg">
+        <Table>
+          <TableHeader class="bg-muted/50">
+            <TableRow>
+              <TableHead class="text-[10px] font-bold uppercase tracking-wider">Classification</TableHead>
+              <TableHead class="text-[10px] font-bold uppercase tracking-wider">Weight</TableHead>
+              <TableHead class="text-right text-[10px] font-bold uppercase tracking-wider">Control</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="category in categories" :key="category.id" class="hover:bg-muted/30 transition-colors">
+              <TableCell class="font-bold text-xs text-foreground tracking-tight">{{ category.name }}</TableCell>
+              <TableCell>
+                <Badge variant="secondary" class="rounded-md px-2 font-mono text-[10px] h-5">{{ category.order_index }}</Badge>
+              </TableCell>
+              <TableCell class="text-right">
+                <div class="flex justify-end gap-1">
+                  <Button variant="ghost" size="icon" class="rounded-lg h-8 w-8 text-muted-foreground hover:text-foreground" @click="openModal(category)">
+                    <LucidePencil class="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" class="rounded-full h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteCategory(category)">
+                    <LucideTrash2 class="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+            <TableRow v-if="!pending && (categories?.length || 0) === 0">
+              <TableCell colspan="3" class="h-40 text-center text-muted-foreground text-xs font-medium italic">
+                {{ !currentShopId ? 'Select a store location' : 'Category list is clear' }}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Card>
+
+      <!-- Minimalist Pagination -->
+      <div v-if="data?.total > 10" class="flex items-center justify-between px-2 py-4 border-t border-border mt-4">
+        <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+          Page {{ currentPage }} of {{ Math.ceil(data.total / 10) }}
+        </p>
+        <div class="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            class="h-9 px-4 rounded-lg text-[10px] font-bold uppercase" 
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            Previous
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            class="h-9 px-4 rounded-lg text-[10px] font-bold uppercase" 
+            :disabled="currentPage >= Math.ceil(data.total / 10)"
+            @click="currentPage++"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -125,11 +154,14 @@ interface Category { id: string; name: string; order_index: number; }
 
 const currentShopId = useState<string | null>('currentShopId');
 const token = useCookie('token');
+const currentPage = ref(1);
 
-const { data: categories, refresh: refreshCategories, pending } = await useFetch<Category[]>(() => 
-  currentShopId.value ? `/api/admin/categories?shopId=${currentShopId.value}` : '/api/admin/categories?shopId=none', 
-  { headers: { Authorization: `Bearer ${token.value}` } }
+const { data, refresh: refreshCategories, pending } = await useFetch<any>(() => 
+  currentShopId.value ? `/api/admin/categories?shopId=${currentShopId.value}&page=${currentPage.value}&limit=10` : '/api/admin/categories?shopId=none', 
+  { headers: { Authorization: `Bearer ${token.value}` }, watch: [currentPage] }
 );
+
+const categories = computed(() => data.value?.items || []);
 
 const isModalOpen = ref(false);
 const isSaving = ref(false);

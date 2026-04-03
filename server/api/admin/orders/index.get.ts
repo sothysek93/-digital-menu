@@ -5,7 +5,14 @@ export default defineEventHandler(async (event) => {
   const shopId = queryParams.shopId as string;
   if (!shopId) throw createError({ statusCode: 400, statusMessage: 'Shop ID required' });
 
-  // Security: Check if user owns the shop (can skip if verified in service or middleware if we trust current access)
-  // For simplicity here, we list all orders for the provided shopId.
-  return await OrderService.getByShop(event, shopId);
+  const page = Number(queryParams.page) || 1;
+  const limit = Number(queryParams.limit) || 10;
+  const status = queryParams.status as string || undefined;
+
+  const [orders, total] = await Promise.all([
+    OrderService.getByShop(event, shopId, page, limit, status),
+    OrderService.countByShop(event, shopId, status)
+  ]);
+
+  return { orders, total };
 });

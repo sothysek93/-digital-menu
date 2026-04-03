@@ -12,8 +12,20 @@ export const CategorySchema = z.object({
 export type Category = z.infer<typeof CategorySchema>;
 
 export class CategoryService {
-  static async getByShop(event: H3Event, shopId: string) {
-    return await query(event, 'SELECT * FROM categories WHERE shop_id = ? ORDER BY order_index ASC', [shopId]);
+  static async getByShop(event: H3Event, shopId: string, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+
+    const items = await query(event, `
+      SELECT * FROM categories 
+      WHERE shop_id = ? 
+      ORDER BY order_index ASC 
+      LIMIT ? OFFSET ?
+    `, [shopId, limit, offset]);
+
+    const countRows: any[] = await query(event, 'SELECT COUNT(*) as total FROM categories WHERE shop_id = ?', [shopId]);
+    const total = countRows[0]?.total || 0;
+
+    return { items, total };
   }
 
   static async create(event: H3Event, category: Omit<Category, 'id'>) {

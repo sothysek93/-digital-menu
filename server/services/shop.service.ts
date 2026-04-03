@@ -18,8 +18,20 @@ export const ShopSchema = z.object({
 export type Shop = z.infer<typeof ShopSchema>;
 
 export class ShopService {
-  static async getByOwner(event: H3Event, ownerId: string) {
-    return await query(event, 'SELECT * FROM shops WHERE owner_id = ?', [ownerId]);
+  static async getByOwner(event: H3Event, ownerId: string, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+
+    const items = await query(event, `
+      SELECT * FROM shops 
+      WHERE owner_id = ? 
+      ORDER BY name ASC 
+      LIMIT ? OFFSET ?
+    `, [ownerId, limit, offset]);
+
+    const countRows: any[] = await query(event, 'SELECT COUNT(*) as total FROM shops WHERE owner_id = ?', [ownerId]);
+    const total = countRows[0]?.total || 0;
+
+    return { items, total };
   }
 
   static async getBySlug(event: H3Event, slug: string) {
@@ -35,7 +47,7 @@ export class ShopService {
     const userRows: any[] = await query(event, 'SELECT account_type FROM users WHERE id = ?', [validated.owner_id]);
     const accountType = userRows[0]?.account_type || 'free';
     
-    if (accountType === 'free' && existing.length >= 3) {
+    if (accountType === 'free' && existing.items.length >= 3) {
       throw createError({
         statusCode: 403,
         statusMessage: 'LIMIT_REACHED: Free accounts are limited to 3 shops. Please upgrade your account.'

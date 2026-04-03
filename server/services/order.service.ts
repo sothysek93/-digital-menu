@@ -60,14 +60,36 @@ export class OrderService {
     return { ...validated, id: orderId, total_price: totalPrice, status: 'pending' };
   }
 
-  static async getByShop(event: H3Event, shopId: string) {
-    const orders = await query(event, `
-      SELECT * FROM orders WHERE shop_id = ? ORDER BY created_at DESC
-    `, [shopId]) as any[];
+  static async countByShop(event: H3Event, shopId: string, status?: string) {
+    let sql = 'SELECT COUNT(*) as total FROM orders WHERE shop_id = ?';
+    const params: any[] = [shopId];
 
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+
+    const results = await query(event, sql, params) as any[];
+    return results[0]?.total || 0;
+  }
+
+  static async getByShop(event: H3Event, shopId: string, page = 1, limit = 10, status?: string) {
+    const offset = (page - 1) * limit;
+    
+    let sql = 'SELECT * FROM orders WHERE shop_id = ?';
+    const params: any[] = [shopId];
+
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+
+    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const orders = await query(event, sql, params) as any[];
     if (orders.length === 0) return [];
 
-    // Fetch all items for these orders in one go
     const orderIds = orders.map(o => o.id);
     const placeholders = orderIds.map(() => '?').join(', ');
     const items = await query(event, `
@@ -77,7 +99,6 @@ export class OrderService {
       WHERE oi.order_id IN (${placeholders})
     `, orderIds) as any[];
 
-    // Map items to orders
     return orders.map(order => ({
       ...order,
       items: items.filter(item => item.order_id === order.id)
