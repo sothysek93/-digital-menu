@@ -42,35 +42,38 @@
       </Dialog>
     </div>
 
-    <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
+    <Card class="border-slate-200 shadow-sm overflow-hidden">
+      <CardHeader>
+        <CardTitle class="text-[10px] font-black uppercase tracking-widest text-slate-400">Inventory Classification</CardTitle>
+      </CardHeader>
       <Table>
-        <TableHeader class="bg-slate-50">
+        <TableHeader>
           <TableRow>
-            <TableHead class="w-[300px]">Category Name</TableHead>
+            <TableHead>Category Name</TableHead>
             <TableHead>Priority</TableHead>
             <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="category in categories" :key="category.id">
-            <TableCell class="font-semibold text-slate-900">{{ category.name }}</TableCell>
+            <TableCell class="font-medium">{{ category.name }}</TableCell>
             <TableCell>
-              <Badge variant="outline" class="font-mono">{{ category.order_index }}</Badge>
+              <Badge variant="secondary">{{ category.order_index }}</Badge>
             </TableCell>
             <TableCell class="text-right">
-              <div class="flex justify-end gap-1">
-                <Button variant="ghost" size="icon" @click="openModal(category)">
-                  <LucidePencil class="h-4 w-4" />
+              <div class="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" @click="openModal(category)">
+                  <LucidePencil class="h-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" class="text-red-500 hover:text-red-600 hover:bg-red-50" @click="deleteCategory(category.id)">
-                  <LucideTrash2 class="h-4 w-4" />
+                <Button variant="ghost" size="sm" class="text-destructive hover:bg-destructive/10" @click="deleteCategory(category.id)">
+                  <LucideTrash2 class="h-4 h-4" />
                 </Button>
               </div>
             </TableCell>
           </TableRow>
           <TableRow v-if="!pending && (categories?.length || 0) === 0">
-            <TableCell colspan="3" class="py-12 text-center text-slate-400 font-medium italic">
-              {{ !currentShopId ? 'Please select a shop location' : 'No categories found. Add your first group!' }}
+            <TableCell colspan="3" class="h-24 text-center text-muted-foreground">
+              {{ !currentShopId ? 'Please select a shop location' : 'No categories found.' }}
             </TableCell>
           </TableRow>
         </TableBody>
@@ -84,7 +87,7 @@ import {
   Plus as LucidePlus, Loader2 as LucideLoader2, 
   Pencil as LucidePencil, Trash2 as LucideTrash2 
 } from 'lucide-vue-next';
-import { Card } from '~/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '~/components/ui/table';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
