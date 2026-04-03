@@ -1,5 +1,5 @@
-import { CategoryService } from '../../services/category.service';
-import { AuthService } from '../../services/auth.service';
+import { CategoryService } from '../../../services/category.service';
+import { AuthService } from '../../../services/auth.service';
 
 export default defineEventHandler(async (event) => {
   const token = getHeader(event, 'Authorization')?.replace('Bearer ', '');

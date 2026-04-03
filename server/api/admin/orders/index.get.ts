@@ -1,4 +1,4 @@
-import { OrderService } from '../../services/order.service';
+import { OrderService } from '../../../services/order.service';
 
 export default defineEventHandler(async (event) => {
   const queryParams = getQuery(event);

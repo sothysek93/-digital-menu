@@ -1,5 +1,5 @@
-import { ShopService } from '../../services/shop.service';
-import { AuthService } from '../../services/auth.service';
+import { ShopService } from '../../../services/shop.service';
+import { AuthService } from '../../../services/auth.service';
 
 export default defineEventHandler(async (event) => {
   const token = getHeader(event, 'Authorization')?.replace('Bearer ', '');
