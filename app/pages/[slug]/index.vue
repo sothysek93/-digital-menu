@@ -353,7 +353,24 @@ const groupedMenu = computed(() => {
 });
 
 // Cart Logic
-const cart = useState<any[]>('menu-cart', () => []);
+const cart = useState<any[]>('menu-cart', () => {
+    // Initial state: try to load from localStorage if on client
+    if (process.client) {
+        const saved = localStorage.getItem(`basket_v1_${slug}`);
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { return []; }
+        }
+    }
+    return [];
+});
+
+// Sync cart to localStorage whenever it evolves
+if (process.client) {
+    watch(cart, (newCart) => {
+        localStorage.setItem(`basket_v1_${slug}`, JSON.stringify(newCart));
+    }, { deep: true });
+}
+
 const cartTotalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
 const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
 
@@ -365,18 +382,21 @@ const addToCart = (item: any) => {
     cart.value.push({ ...item, quantity: 1 });
   }
   
-  toast.success('Basket Updated', {
-    description: `${item.name} has been added.`
+  toast.success('Selection Captured', {
+    description: `${item.name} is now in your basket.`
   });
 };
 
 const removeFromCart = (id: string) => {
-  const existing = cart.value.find(i => i.id === id);
-  if (existing) {
-    existing.quantity--;
-    if (existing.quantity === 0) {
-      cart.value = cart.value.filter(i => i.id !== id);
-      toast.info('Item Removed');
+  const existingIndex = cart.value.findIndex(i => i.id === id);
+  if (existingIndex > -1) {
+    const item = cart.value[existingIndex];
+    item.quantity--;
+    if (item.quantity === 0) {
+      cart.value.splice(existingIndex, 1);
+      toast.info('Item Discarded', {
+          description: 'The selection has been removed from your basket.'
+      });
     }
   }
 };
@@ -431,6 +451,9 @@ const submitOrder = async () => {
     orderSuccess.value = true;
     isSheetOpen.value = false;
     cart.value = [];
+    if (process.client) {
+        localStorage.removeItem(`basket_v1_${slug}`);
+    }
   } catch (e: any) {
     toast.error('Dispatch Failed', { 
         description: e.data?.message || 'We could not transmit your order. Please check your connection.' 
