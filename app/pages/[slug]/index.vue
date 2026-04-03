@@ -172,6 +172,26 @@
       </div>
     </transition>
 
+    <div v-if="orderSuccess" class="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
+      <div class="max-w-sm w-full text-center space-y-8">
+        <div class="relative mx-auto w-24 h-24">
+          <div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+          <div class="relative bg-primary rounded-full w-full h-full flex items-center justify-center shadow-2xl">
+            <LucideCheck class="w-12 h-12 text-primary-foreground" />
+          </div>
+        </div>
+        <div class="space-y-2">
+          <h2 class="text-3xl font-black uppercase italic text-foreground tracking-tighter">Order Received</h2>
+          <p class="text-muted-foreground text-sm font-medium leading-relaxed">
+            Your table #{{ orderForm.table_number }} order is being prepared by our chefs right now.
+          </p>
+        </div>
+        <Button class="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px]" @click="orderSuccess = false">
+           Back to Menu
+        </Button>
+      </div>
+    </div>
+
     <!-- Footer -->
     <footer class="py-24 border-t border-border text-center space-y-6 flex flex-col items-center">
       <div v-if="data?.shop?.logo_url" class="w-12 h-12 rounded-2xl overflow-hidden opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
@@ -192,12 +212,14 @@
 <script setup lang="ts">
 import { 
   ChefHat as LucideChefHat, Search as LucideSearch, Plus as LucidePlus, ShoppingCart as LucideShoppingCart,
-  Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo
+  Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo,
+  Check as LucideCheck
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
+import { toast } from 'vue-sonner';
 
 const route = useRoute();
 const slug = route.params.slug as string;
@@ -238,6 +260,9 @@ const addToCart = (item: any) => {
     existing.quantity++;
   } else {
     cart.value.push({ ...item, quantity: 1 });
+    toast.success(`${item.name} added`, {
+      description: 'Your selection has been updated.'
+    });
   }
 };
 
@@ -253,6 +278,7 @@ const removeFromCart = (id: string) => {
 
 // Order Submission
 const isSubmitting = ref(false);
+const orderSuccess = ref(false);
 const orderForm = reactive({
   customer_name: '',
   table_number: table.value,
@@ -266,7 +292,10 @@ watch(() => route.query.table, (newTable) => {
 });
 
 const submitOrder = async () => {
-  if (cart.value.length === 0 || !orderForm.table_number) return;
+  if (cart.value.length === 0 || !orderForm.table_number) {
+    toast.error('Details needed', { description: 'Please provide your table number.' });
+    return;
+  }
   
   isSubmitting.value = true;
   try {
@@ -287,11 +316,11 @@ const submitOrder = async () => {
       }
     });
 
-    alert('Order placed successfully! We are preparing it.');
+    orderSuccess.value = true;
     cart.value = [];
   } catch (e) {
     console.error('Order error:', e);
-    alert('Failed to place order. Please try again.');
+    toast.error('Order failed', { description: 'Please check your connection.' });
   } finally {
     isSubmitting.value = false;
   }

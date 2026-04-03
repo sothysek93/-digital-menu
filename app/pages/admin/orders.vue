@@ -2,10 +2,10 @@
   <div class="space-y-8 pb-20">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Live Orders</h2>
-        <p class="text-slate-500 text-sm">Real-time incoming orders from your QR menu.</p>
+        <h2 class="text-3xl font-bold tracking-tight text-foreground">Live Orders</h2>
+        <p class="text-muted-foreground text-sm">Real-time incoming orders from your QR menu.</p>
       </div>
-      <div v-if="pending" class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+      <div v-if="pending" class="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest bg-muted px-3 py-1.5 rounded-full">
          <LucideLoader2 class="w-3 h-3 animate-spin" />
          Updating...
       </div>
@@ -15,69 +15,68 @@
       <!-- High Priority / New Orders -->
       <div class="lg:col-span-2 space-y-6">
         <div v-for="order in sortedOrders" :key="order.id" 
-          class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+          class="bg-card border border-border rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
         >
-          <div class="p-6 flex items-start justify-between border-b border-slate-50">
+          <div class="p-6 flex items-start justify-between border-b border-border/50">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-lg shadow-lg">
+              <div class="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-black text-lg shadow-lg">
                 #{{ order.table_number || '?' }}
               </div>
               <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                <p class="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">
                   Table Order • {{ formatTime(order.created_at) }}
                 </p>
-                <h3 class="font-bold text-slate-900 text-lg leading-tight uppercase">
-                  {{ order.customer_name || 'Guest Customer' }}
+                <h3 class="font-bold text-foreground text-lg leading-tight uppercase">
+                  {{ order.customer_name || 'Guest' }}
                 </h3>
               </div>
             </div>
-            <div class="flex flex-col items-end gap-2">
+            <div class="flex flex-col items-end gap-2 text-right">
               <Badge :variant="getStatusVariant(order.status)" class="rounded-full px-3 py-1 text-[10px] uppercase font-black tracking-widest">
                 {{ order.status }}
               </Badge>
-              <p class="font-mono font-bold text-slate-900">${{ order.total_price?.toFixed(2) }}</p>
+              <p class="font-mono font-bold text-foreground">${{ order.total_price?.toFixed(2) }}</p>
             </div>
           </div>
 
           <div class="px-6 py-4 space-y-4">
              <!-- Order Action Buttons -->
              <div class="flex items-center gap-2">
-               <Button v-if="order.status === 'pending'" size="sm" class="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px] h-10 bg-slate-900" @click="updateStatus(order.id, 'preparing')">
+               <Button v-if="order.status === 'pending'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 bg-primary text-primary-foreground" @click="updateStatus(order.id, 'preparing')">
                  Accept & Prepare
                </Button>
-               <Button v-if="order.status === 'preparing'" size="sm" class="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px] h-10 bg-slate-900" @click="updateStatus(order.id, 'served')">
+               <Button v-if="order.status === 'preparing'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 bg-primary text-primary-foreground" @click="updateStatus(order.id, 'served')">
                  Mark as Served
                </Button>
-               <Button v-if="order.status === 'served'" size="sm" class="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px] h-10 border-slate-900" variant="outline" @click="updateStatus(order.id, 'completed')">
+               <Button v-if="order.status === 'served'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 border-primary" variant="outline" @click="updateStatus(order.id, 'completed')">
                  Complete
                </Button>
-               <Button variant="ghost" size="icon" class="h-10 w-10 text-red-500 hover:bg-red-50" @click="updateStatus(order.id, 'cancelled')">
+               <Button variant="ghost" size="icon" class="h-10 w-10 text-destructive hover:bg-destructive/10" @click="updateStatus(order.id, 'cancelled')">
                  <LucideXCircle class="w-5 h-5" />
                </Button>
              </div>
           </div>
         </div>
 
-        <div v-if="!pending && orders?.length === 0" class="py-32 text-center bg-white border border-dashed border-slate-200 rounded-3xl">
-           <LucideShoppingCart class="w-12 h-12 text-slate-100 mx-auto mb-4" />
-           <p class="text-slate-400 font-medium italic">Waiting for incoming orders...</p>
+        <div v-if="!pending && (orders?.length || 0) === 0" class="py-32 text-center border-2 border-dashed rounded-3xl">
+           <LucideShoppingCart class="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+           <p class="text-muted-foreground">No active orders found.</p>
         </div>
       </div>
 
       <!-- Stats / Sidebar -->
       <div class="space-y-6">
-        <Card class="border-slate-200 rounded-3xl p-6 bg-slate-900 text-white shadow-xl overflow-hidden relative">
-          <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+        <Card class="border-border rounded-3xl p-6 bg-primary text-primary-foreground shadow-xl overflow-hidden relative">
           <div class="relative z-10">
-            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Order Statistics</p>
+            <p class="text-[10px] font-black uppercase tracking-widest text-primary-foreground/40 mb-6">Service Load</p>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <p class="text-2xl font-bold">{{ pendingCount }}</p>
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending</p>
+                <p class="text-[9px] font-black uppercase tracking-widest text-primary-foreground/60">Pending</p>
               </div>
               <div>
                 <p class="text-2xl font-bold">{{ preparingCount }}</p>
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-500">Preparing</p>
+                <p class="text-[9px] font-black uppercase tracking-widest text-primary-foreground/60">Cooking</p>
               </div>
             </div>
           </div>
