@@ -20,13 +20,29 @@
         </div>
       </div>
       
-      <!-- Minimalist Tracking Button -->
-      <div v-if="persistedOrderIds.length > 0">
-         <Button variant="outline" size="sm" class="h-8 rounded-lg text-[10px] font-bold uppercase px-3 gap-2" @click="viewRecentOrder">
-            <LucideLoader2 v-if="isLoadingActiveOrder" class="w-3 h-3 animate-spin text-primary" />
-            <LucideEye v-else class="w-3 h-3" />
-            Track Status
-         </Button>
+      <!-- Minimalist Tracking & Queue Buttons -->
+      <div class="flex items-center gap-2">
+         <div v-if="persistedOrderIds.length > 0">
+            <Button variant="outline" size="sm" class="h-8 rounded-lg text-[10px] font-bold uppercase px-3 gap-2" @click="viewRecentOrder">
+               <LucideLoader2 v-if="isLoadingActiveOrder" class="w-3 h-3 animate-spin text-primary" />
+               <LucideEye v-else class="w-3 h-3" />
+               Track Status
+            </Button>
+         </div>
+
+         <!-- Queue Button for Walk-ins -->
+         <NuxtLink v-if="!table" :to="`/${slug}/queue`" class="no-underline">
+            <Button variant="outline" size="sm" class="h-8 rounded-lg text-[10px] font-bold uppercase px-3 gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors">
+               <template v-if="activeTicket">
+                  <LucideTicket class="w-3 h-3" />
+                  Status: #{{ activeTicket.number }}
+               </template>
+               <template v-else>
+                  <LucideUsers class="w-3 h-3" />
+                  Join Waitlist
+               </template>
+            </Button>
+         </NuxtLink>
       </div>
     </header>
 
@@ -267,8 +283,10 @@
 import { 
   ChefHat as LucideChefHat, Search as LucideSearch, Plus as LucidePlus, ShoppingCart as LucideShoppingCart,
   Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo,
-  Check as LucideCheck, Eye as LucideEye, XCircle as LucideXCircle, Clock as LucideClock, History as LucideHistory
+  Check as LucideCheck, Eye as LucideEye, XCircle as LucideXCircle, Clock as LucideClock, History as LucideHistory,
+  Users as LucideUsers, Ticket as LucideTicket
 } from 'lucide-vue-next';
+import { useLocalStorage } from '@vueuse/core';
 import { Button } from '~/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Card } from '~/components/ui';
 import { Label } from '~/components/ui/label';
@@ -287,6 +305,7 @@ const isSubmitting = ref(false);
 const activeCategory = ref('');
 const activeOrders = ref<any[]>([]);
 const isLoadingActiveOrder = ref(false);
+const activeTicket = useLocalStorage<{ id: string; number: string } | null>(`queue_ticket_${slug}`, null);
 const cart = useState<any[]>('menu-cart', () => []);
 const persistedOrderIds = useState<string[]>('active-order-ids', () => []);
 

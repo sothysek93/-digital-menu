@@ -148,7 +148,8 @@ import {
   LayoutGrid as LucideLayoutGrid, List as LucideList, Settings as LucideSettings, 
   LogOut as LucideLogOut, LayoutDashboard as LucideLayoutDashboard, Store as LucideStore, 
   ChefHat as LucideChefHat, Menu as LucideMenu, Plus as LucidePlus,
-  ShoppingCart as LucideShoppingCart, ExternalLink as LucideExternalLink
+  ShoppingCart as LucideShoppingCart, ExternalLink as LucideExternalLink,
+  Users as LucideUsers
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from '~/components/ui';
@@ -172,7 +173,8 @@ const navLinks = computed(() => {
   const slug = currentShop?.slug;
 
   const links = [
-    { label: 'Live Queue', to: '/admin/orders', icon: LucideShoppingCart },
+    { label: 'Live Orders', to: '/admin/orders', icon: LucideShoppingCart },
+    { label: 'Queue Station', to: '/admin/queue', icon: LucideUsers },
     { label: 'Menu Items', to: '/admin/menu', icon: LucideChefHat },
     { label: 'Categories', to: '/admin/categories', icon: LucideList },
     { label: 'Shops', to: '/admin/shops', icon: LucideStore },
