@@ -110,31 +110,32 @@ const handleRegister = async () => {
   loading.value = true;
   
   try {
-    await $fetch('/api/admin/register', {
+    const res = await $fetch('/api/admin/register', {
       method: 'POST',
       body: form
-    });
-    
-    toast.success('Welcome! Your restaurant has been created.', {
-      description: 'Redirecting you to your dashboard...'
-    });
-    
-    // Auto login after registration
-    const res = await $fetch('/api/admin/login', {
-      method: 'POST',
-      body: { email: form.email, password: form.password }
     }) as any;
     
+    // Server returns token and user on successful registration
     token.value = res.token;
     userState.value = res.user;
+
+    toast.success('Account Created', {
+      description: `Welcome! Your restaurant console is ready.`
+    });
     
     setTimeout(() => {
       router.push('/admin');
     }, 1000);
   } catch (err: any) {
-    const errorMsg = err.data?.message || 'Registration failed. Please check your details.';
-    toast.error('Unable to create account', {
-      description: errorMsg
+    // Specifically handle statusMessage from H3 errors
+    const errorMsg = err.statusMessage || err.data?.message || 'We could not create your account at this time.';
+    
+    toast.error('Registration Blocked', {
+      description: errorMsg,
+      action: {
+        label: 'Retry',
+        onClick: () => handleRegister()
+      }
     });
   } finally {
     loading.value = false;

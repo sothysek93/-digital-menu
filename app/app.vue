@@ -2,7 +2,8 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-  <Toaster position="top-center" rich-colors />
+  <!-- Global Toast Provider: Ensuring it floats above all overlays -->
+  <Toaster position="top-right" :rich-colors="true" :expand="false" :close-button="true" />
 </template>
 
 <script setup lang="ts">

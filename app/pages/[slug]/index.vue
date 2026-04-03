@@ -275,10 +275,11 @@ const addToCart = (item: any) => {
     existing.quantity++;
   } else {
     cart.value.push({ ...item, quantity: 1 });
-    toast.success(`${item.name} added`, {
-      description: 'Your selection has been updated.'
-    });
   }
+  
+  toast.success('Basket Updated', {
+    description: `${item.name} has been added.`
+  });
 };
 
 const removeFromCart = (id: string) => {
@@ -287,6 +288,7 @@ const removeFromCart = (id: string) => {
     existing.quantity--;
     if (existing.quantity === 0) {
       cart.value = cart.value.filter(i => i.id !== id);
+      toast.info('Item Removed');
     }
   }
 };
@@ -306,7 +308,7 @@ watch(() => route.query.table, (newTable) => {
 
 const submitOrder = async () => {
   if (cart.value.length === 0 || !orderForm.table_number) {
-    toast.error('Details needed', { description: 'Please provide your table number.' });
+    toast.error('Identification Needed', { description: 'Please provide your table number to proceed.' });
     return;
   }
   
@@ -334,12 +336,17 @@ const submitOrder = async () => {
         persistedOrderId.value = res.id;
     }
 
+    toast.success('Order Dispatched', {
+        description: 'Our kitchen has received your ticket.'
+    });
+
     orderSuccess.value = true;
     isSheetOpen.value = false;
     cart.value = [];
-  } catch (e) {
-    console.error('Order error:', e);
-    toast.error('Order failed', { description: 'Please check your connection.' });
+  } catch (e: any) {
+    toast.error('Dispatch Failed', { 
+        description: e.data?.message || 'We could not transmit your order. Please check your connection.' 
+    });
   } finally {
     isSubmitting.value = false;
   }
