@@ -1,74 +1,82 @@
 <template>
-  <div class="min-h-screen bg-background flex items-center justify-center p-4">
-    <Card class="w-full max-w-lg border-border shadow-sm">
-      <CardHeader class="space-y-1 text-center">
-        <div class="flex justify-center mb-4">
-          <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center transition-transform hover:rotate-12">
-            <LucideShieldCheck class="w-5 h-5 text-primary-foreground" />
+  <div class="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-500">
+    <Card class="w-full max-w-md border-border shadow-none rounded-lg p-6 bg-card">
+      <CardHeader class="space-y-4 px-0 pt-0 pb-6 text-center">
+        <div class="flex justify-center">
+          <div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border border-border">
+            <LucideShieldCheck class="w-4 h-4 text-foreground" />
           </div>
         </div>
-        <CardTitle class="text-2xl font-bold tracking-tight">Create Account</CardTitle>
-        <CardDescription>Register your restaurant to start managing your menu</CardDescription>
+        <div class="space-y-1">
+          <CardTitle class="text-xl font-bold tracking-tight uppercase">Platform Onboarding</CardTitle>
+          <CardDescription class="text-[10px] font-bold uppercase tracking-widest opacity-60">Initialize New Restaurant Unit</CardDescription>
+        </div>
       </CardHeader>
 
-      <CardContent>
-        <form @submit.prevent="handleRegister" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <Label for="name">Restaurant Name</Label>
+      <CardContent class="px-0 pb-0">
+        <form @submit.prevent="handleRegister" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <Label for="name" class="text-[10px] font-bold uppercase text-muted-foreground px-0.5 tracking-wider">Unit Name</Label>
               <Input 
                 id="name"
                 v-model="form.name" 
                 placeholder="The Burger Joint"
                 required
+                class="h-10 rounded-lg bg-background font-medium"
               />
             </div>
 
-            <div class="space-y-2">
-              <Label for="slug">URL Slug</Label>
+            <div class="space-y-1.5">
+              <Label for="slug" class="text-[10px] font-bold uppercase text-muted-foreground px-0.5 tracking-wider">URL Identifier</Label>
               <Input 
                 id="slug"
                 v-model="form.slug" 
-                placeholder="burger-joint"
+                placeholder="slug-name"
                 required
+                class="h-10 rounded-lg bg-background font-medium"
               />
             </div>
           </div>
 
-          <div class="space-y-2">
-            <Label for="email">Email Address</Label>
+          <div class="space-y-1.5">
+            <Label for="email" class="text-[10px] font-bold uppercase text-muted-foreground px-0.5 tracking-wider">Admin Contact</Label>
             <Input 
               id="email"
               v-model="form.email" 
               type="email" 
-              placeholder="name@example.com"
+              placeholder="admin@platform.com"
               required
+              class="h-10 rounded-lg bg-background font-medium"
             />
           </div>
 
-          <div class="space-y-2">
-            <Label for="password">Security Password</Label>
+          <div class="space-y-1.5">
+            <Label for="password" class="text-[10px] font-bold uppercase text-muted-foreground px-0.5 tracking-wider">Security Phrase</Label>
             <Input 
               id="password"
               v-model="form.password" 
               type="password" 
               placeholder="••••••••"
               required
+              class="h-10 rounded-lg bg-background font-medium"
             />
           </div>
 
-          <Button 
-            type="submit" 
-            class="w-full mt-4 h-11" 
-            :disabled="loading"
-          >
-            <LucideLoader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-            <span v-else>Register & Connect</span>
-          </Button>
+          <div class="pt-2">
+            <Button 
+              type="submit" 
+              class="w-full h-11 rounded-lg bg-foreground text-background font-bold uppercase text-[10px] tracking-[0.2em] hover:bg-foreground/90" 
+              :disabled="loading"
+            >
+              <LucideLoader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+              Initialize & Deploy
+            </Button>
+          </div>
 
-          <div class="text-center pt-4">
-            <NuxtLink to="/admin/login" class="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 font-medium transition-colors">
-              Already have an account? Sign In
+          <div class="text-center pt-2">
+            <NuxtLink to="/admin/login" class="text-[10px] uppercase font-bold text-muted-foreground hover:text-foreground tracking-widest transition-colors">
+              Access Existing Unit
             </NuxtLink>
           </div>
         </form>
