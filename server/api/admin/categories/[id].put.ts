@@ -1,4 +1,4 @@
-import { MenuService } from '../../../services/menu.service';
+import { CategoryService } from '../../../services/category.service';
 import { AuthService } from '../../../services/auth.service';
 
 export default defineEventHandler(async (event) => {
@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!payload || !payload.id) throw createError({ statusCode: 401 });
 
   const id = getRouterParam(event, 'id');
-  if (!id) throw createError({ statusCode: 400, message: 'ID required' });
+  if (!id) throw createError({ statusCode: 400, message: 'Missing ID' });
 
   const body = await readBody(event);
-  return await MenuService.update(event, id, body);
+  return await CategoryService.update(event, id, body);
 });
