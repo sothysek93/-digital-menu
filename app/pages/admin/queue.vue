@@ -272,6 +272,7 @@ const getStatusColor = (status: string) => {
                 <TableHead class="text-[10px] font-bold uppercase tracking-widest px-6 h-12">Ticket</TableHead>
                 <TableHead class="text-[10px] font-bold uppercase tracking-widest h-12">Outcome</TableHead>
                 <TableHead class="text-[10px] font-bold uppercase tracking-widest h-12">Guest</TableHead>
+                <TableHead class="text-[10px] font-bold uppercase tracking-widest h-12">Contact</TableHead>
                 <TableHead class="text-[10px] font-bold uppercase tracking-widest h-12 text-right px-6">Timestamp</TableHead>
               </TableRow>
             </TableHeader>
@@ -284,6 +285,7 @@ const getStatusColor = (status: string) => {
                   </Badge>
                 </TableCell>
                 <TableCell class="text-xs font-bold text-foreground capitalize">{{ entry.name }}</TableCell>
+                <TableCell class="text-[10px] font-mono text-muted-foreground">{{ entry.phone }}</TableCell>
                 <TableCell class="text-right px-6 text-[10px] font-mono font-bold text-muted-foreground">
                   {{ new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
                 </TableCell>
