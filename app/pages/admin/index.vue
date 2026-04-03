@@ -6,8 +6,8 @@
   <div v-else class="space-y-8 pb-12">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900 line-clamp-1">Menu Catalog</h2>
-        <p class="text-slate-500 text-sm">Manage the dishes for your active location.</p>
+        <h2 class="text-3xl font-bold tracking-tight text-foreground line-clamp-1">Menu Catalog</h2>
+        <p class="text-muted-foreground text-sm">Manage the dishes for your active location.</p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -34,7 +34,7 @@
               <div class="space-y-2">
                 <Label>Category</Label>
                 <Select v-model="form.category_id" required>
-                  <SelectTrigger class="w-full bg-white border-slate-200">
+                  <SelectTrigger class="w-full bg-background border-border">
                     <SelectValue placeholder="Select a Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -43,7 +43,7 @@
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <p v-if="categories?.length === 0" class="text-[10px] text-red-500 font-bold uppercase tracking-widest mt-1">
+                <p v-if="categories?.length === 0" class="text-[10px] text-destructive font-bold uppercase tracking-widest mt-1">
                    No categories found. Create one first!
                 </p>
               </div>
@@ -53,7 +53,7 @@
                 <textarea 
                   id="dish_desc"
                   v-model="form.description" 
-                  class="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950"
+                  class="flex min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="Describe the flavors..."
                 ></textarea>
               </div>
@@ -72,13 +72,13 @@
               <div class="space-y-2 pt-2">
                 <Label>Image</Label>
                 <div 
-                   class="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors overflow-hidden group"
+                   class="relative aspect-video rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted transition-colors overflow-hidden group"
                    @click="fileInput?.click()"
                  >
                   <img v-if="form.image_url" :src="form.image_url" class="absolute inset-0 w-full h-full object-cover" />
                   <div v-else class="text-center">
-                    <LucideImage class="mx-auto h-8 w-8 text-slate-300 group-hover:scale-110 transition-transform" />
-                    <span class="text-xs text-slate-400 mt-2 block font-black uppercase tracking-widest leading-none">Upload Cover</span>
+                    <LucideImage class="mx-auto h-8 w-8 text-muted-foreground opacity-30 group-hover:scale-110 transition-transform" />
+                    <span class="text-xs text-muted-foreground mt-2 block font-black uppercase tracking-widest leading-none">Upload Cover</span>
                   </div>
                 </div>
                 <input ref="fileInput" type="file" class="hidden" @change="uploadImage" />
@@ -98,9 +98,9 @@
     </div>
 
     <!-- Inventory Table -->
-    <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
+    <Card class="border-border shadow-sm overflow-hidden">
       <Table>
-        <TableHeader class="bg-slate-50">
+        <TableHeader>
           <TableRow>
             <TableHead class="w-[80px]">Photo</TableHead>
             <TableHead>Item Details</TableHead>
@@ -113,16 +113,16 @@
         <TableBody>
           <TableRow v-for="item in (menuItems || [])" :key="item.id">
             <TableCell>
-              <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+              <div class="w-12 h-12 rounded-xl bg-muted overflow-hidden border border-border">
                 <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover" />
               </div>
             </TableCell>
             <TableCell>
-              <div class="font-bold text-slate-900 leading-tight">{{ item.name }}</div>
-              <div class="text-[10px] text-slate-400 line-clamp-1 italic max-w-[150px]">{{ item.description }}</div>
+              <div class="font-bold text-foreground leading-tight">{{ item.name }}</div>
+              <div class="text-[10px] text-muted-foreground line-clamp-1 italic max-w-[150px]">{{ item.description }}</div>
             </TableCell>
             <TableCell>
-              <Badge variant="outline" class="bg-white text-[10px] uppercase font-black tracking-widest whitespace-nowrap">
+              <Badge variant="outline" class="text-[10px] uppercase font-black tracking-widest whitespace-nowrap">
                 {{ item.category_name || 'Uncategorized' }}
               </Badge>
             </TableCell>
@@ -137,14 +137,14 @@
                 <Button variant="ghost" size="icon" @click="openModal(item)" class="h-8 w-8 rounded-lg">
                   <LucidePencil class="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50" @click="deleteItem(item.id)">
+                <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" @click="deleteItem(item.id)">
                   <LucideTrash2 class="h-3.5 w-3.5" />
                 </Button>
               </div>
             </TableCell>
           </TableRow>
           <TableRow v-if="!pending && (!menuItems || menuItems.length === 0)">
-            <TableCell colspan="6" class="py-20 text-center text-slate-400 font-medium italic">
+            <TableCell colspan="6" class="py-20 text-center text-muted-foreground font-medium italic">
               {{ !currentShopId ? 'Please select a shop location' : 'No items found. Ready your first dish!' }}
             </TableCell>
           </TableRow>
@@ -153,16 +153,16 @@
     </Card>
       
     <!-- Public URL Info -->
-    <div v-if="currentShop" class="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
-      <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <div v-if="currentShop" class="bg-card border border-border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+      <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
       
       <div class="flex items-center gap-4 relative z-10">
-        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-slate-800 shadow-xl">
-           <LucideGlobe class="w-6 h-6 text-white" />
+        <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
+           <LucideGlobe class="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1.5">Live Menu Endpoint</div>
-          <div class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <div class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1.5">Live Menu Endpoint</div>
+          <div class="text-sm font-bold text-foreground flex items-center gap-2">
             /{{ currentShop?.slug }}
             <Badge variant="outline" class="text-[9px] h-4 uppercase font-black">Syncing Live</Badge>
           </div>
@@ -173,7 +173,7 @@
         <Button variant="outline" class="flex-1 md:flex-none rounded-xl shadow-sm h-11 px-6 text-xs font-bold uppercase tracking-widest" @click="copyLink">
            Copy Link
         </Button>
-        <Button as-child class="flex-1 md:flex-none rounded-xl shadow-lg h-11 px-6 text-xs font-bold uppercase tracking-widest bg-slate-900 hover:translate-y-[-2px] transition-transform">
+        <Button as-child class="flex-1 md:flex-none rounded-xl shadow-lg h-11 px-6 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:translate-y-[-2px] transition-transform">
            <NuxtLink :to="`/${currentShop?.slug}`" target="_blank">
              Open Public Menu
              <LucideExternalLink class="ml-2 h-3.5 w-3.5" />
