@@ -202,7 +202,7 @@ const saveShop = async () => {
     const url = isEdit ? `/api/admin/shops/${form.id}` : '/api/admin/shops';
     
     await $fetch(url, {
-      method: isEdit ? 'PUT' : 'POST',
+      method: (isEdit ? 'PUT' : 'POST') as any,
       body: form,
       headers: { Authorization: `Bearer ${token.value}` }
     });
@@ -236,7 +236,7 @@ const confirmDelete = async () => {
   
   try {
     await $fetch(`/api/admin/shops/${shopToDelete.value.id}`, {
-      method: 'DELETE',
+      method: 'DELETE' as any,
       headers: { Authorization: `Bearer ${token.value}` }
     });
     
