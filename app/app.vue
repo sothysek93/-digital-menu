@@ -2,8 +2,8 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-  <!-- Global Toast Provider: Ensuring it floats above all overlays -->
-  <Toaster position="top-right" :rich-colors="true" :expand="false" :close-button="true" />
+  <!-- Global Toast Provider: Ensuring newer messages are always prioritized and visible -->
+  <Toaster position="top-right" :rich-colors="true" :expand="true" :close-button="true" :visible-toasts="8" />
 </template>
 
 <script setup lang="ts">
