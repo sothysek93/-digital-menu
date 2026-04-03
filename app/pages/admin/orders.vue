@@ -48,19 +48,18 @@
                     <span class="text-xs font-bold text-foreground uppercase tracking-tight truncate max-w-[120px]">{{ order.customer_name || 'Guest User' }}</span>
                   </div>
                 </div>
-                <Badge 
-                  variant="secondary" 
+                <div 
                   :class="[
-                    'rounded-md px-2 py-0.5 text-[8px] uppercase font-bold tracking-widest border-transparent text-white',
-                    order.status === 'pending' ? 'bg-amber-500 hover:bg-amber-600' : '',
-                    order.status === 'preparing' ? 'bg-blue-500 hover:bg-blue-600' : '',
-                    order.status === 'served' ? 'bg-emerald-500 hover:bg-emerald-600' : '',
-                    order.status === 'completed' ? 'bg-slate-500 hover:bg-slate-600' : '',
-                    order.status === 'cancelled' ? 'bg-red-500 hover:bg-red-600' : '',
+                    'rounded-md px-2 py-0.5 text-[8px] uppercase font-bold tracking-widest border border-transparent shadow-none flex items-center h-5',
+                    order.status === 'pending' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : '',
+                    order.status === 'preparing' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' : '',
+                    order.status === 'served' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : '',
+                    order.status === 'completed' ? 'bg-slate-500/10 text-slate-600 border-slate-500/20' : '',
+                    order.status === 'cancelled' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : '',
                   ]"
                 >
                   {{ order.status }}
-                </Badge>
+                </div>
               </div>
 
               <div class="p-4 flex-1 space-y-2 bg-background min-h-[120px]">

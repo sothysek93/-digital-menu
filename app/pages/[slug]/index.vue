@@ -211,7 +211,9 @@
               <div class="flex items-center justify-between">
                  <div class="flex items-center gap-2">
                     <span class="text-[9px] font-mono font-bold px-2 py-0.5 bg-background border border-border rounded-md">#{{ order.id.slice(-6).toUpperCase() }}</span>
-                    <Badge :variant="getStatusVariant(order.status)" class="rounded-md text-[8px] font-bold uppercase h-5 px-1.5">{{ order.status }}</Badge>
+                    <div :class="['rounded-md text-[8px] font-bold uppercase h-5 px-2 flex items-center border border-transparent shadow-none', getStatusStyle(order.status)]">
+                      {{ order.status }}
+                    </div>
                  </div>
                  <div class="flex items-center gap-1.5">
                     <LucideClock class="w-3 h-3 text-muted-foreground/40" />
@@ -483,15 +485,15 @@ const clearHistory = () => {
     toast.info('Tracking Cleared', { description: 'History has been reset.' });
 };
 
-const getStatusVariant = (status: string) => {
+const getStatusStyle = (status: string) => {
     const map: Record<string, string> = {
-        'pending': 'destructive',
-        'preparing': 'default',
-        'served': 'secondary',
-        'completed': 'outline',
-        'cancelled': 'outline'
+        'pending': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+        'preparing': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+        'served': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+        'completed': 'bg-slate-500/10 text-slate-600 border-slate-500/20',
+        'cancelled': 'bg-rose-500/10 text-rose-600 border-rose-500/20'
     };
-    return (map[status] || 'secondary') as any;
+    return map[status] || 'bg-muted text-muted-foreground border-border';
 };
 
 const formatTime = (dateStr: string) => {

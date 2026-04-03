@@ -94,4 +94,71 @@ export class MenuService {
     await query(event, 'DELETE FROM menu_items WHERE id = ?', [id]);
     return { success: true };
   }
+
+  static async syncFromOtherShop(event: H3Event, sourceShopId: string, targetShopId: string, includeBranding = false) {
+    // 1. Optional Branding & Service Sync
+    if (includeBranding) {
+      const sourceShop: any[] = await query(event, 'SELECT * FROM shops WHERE id = ?', [sourceShopId]);
+      if (sourceShop[0]) {
+        const s = sourceShop[0];
+        await query(event, `
+          UPDATE shops SET 
+            logo_url = ?, 
+            business_hours = ?, 
+            phone = ?, 
+            address = ?, 
+            description = ?
+          WHERE id = ?
+        `, [s.logo_url, s.business_hours, s.phone, s.address, s.description, targetShopId]);
+      }
+    }
+
+    // 2. Load Target state for duplicate detection
+    const existingCategories: any[] = await query(event, 'SELECT * FROM categories WHERE shop_id = ?', [targetShopId]);
+    const targetCatMap = new Map(existingCategories.map(c => [c.name.toLowerCase(), c.id]));
+    
+    // 3. Sync Categories
+    const sourceCategories: any[] = await query(event, 'SELECT * FROM categories WHERE shop_id = ?', [sourceShopId]);
+    const categoryIdMapping = new Map<string, string>(); // sourceId -> targetId
+
+    for (const cat of sourceCategories) {
+      const existingId = targetCatMap.get(cat.name.toLowerCase());
+      if (existingId) {
+        categoryIdMapping.set(cat.id, existingId);
+      } else {
+        const newId = crypto.randomUUID();
+        await query(event, 'INSERT INTO categories (id, shop_id, name, order_index) VALUES (?, ?, ?, ?)', [
+          newId, targetShopId, cat.name, cat.order_index
+        ]);
+        categoryIdMapping.set(cat.id, newId);
+      }
+    }
+
+    // 4. Load Target Items for duplicate detection
+    const existingItems: any[] = await query(event, 'SELECT name, category_id FROM menu_items WHERE shop_id = ?', [targetShopId]);
+    const itemGuard = new Set(existingItems.map(i => `${i.category_id}|${i.name.toLowerCase()}`));
+
+    // 5. Sync Items
+    const sourceItems: any[] = await query(event, 'SELECT * FROM menu_items WHERE shop_id = ?', [sourceShopId]);
+    let syncedCount = 0;
+
+    for (const item of sourceItems) {
+      const targetCategoryId = categoryIdMapping.get(item.category_id);
+      if (!targetCategoryId) continue;
+
+      const itemKey = `${targetCategoryId}|${item.name.toLowerCase()}`;
+      if (itemGuard.has(itemKey)) continue;
+
+      const newId = crypto.randomUUID();
+      await query(event, `
+        INSERT INTO menu_items (id, shop_id, category_id, name, description, price, image_url, is_available, order_index)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        newId, targetShopId, targetCategoryId, item.name, item.description, item.price, item.image_url, item.is_available, item.order_index
+      ]);
+      syncedCount++;
+    }
+    
+    return { itemsCount: syncedCount };
+  }
 }

@@ -4,13 +4,71 @@
       <span class="ml-4 text-muted-foreground font-bold tracking-tight text-xs uppercase animate-pulse">Syncing...</span>
   </div>
   <div v-else class="space-y-8 pb-12 animate-in fade-in duration-500">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
       <div>
         <h2 class="text-3xl font-bold tracking-tight text-foreground">Menu Items</h2>
         <p class="text-muted-foreground text-sm font-medium">Manage dishes for the current location.</p>
       </div>
 
       <div class="flex items-center gap-2">
+        <Dialog v-model:open="isSyncModalOpen">
+          <DialogTrigger as-child>
+            <Button variant="outline" class="rounded-lg h-10 px-4 border-dashed border-border hover:bg-accent/50" :disabled="!currentShopId || (shopsResult?.items?.length || 0) < 2">
+              <LucideRefreshCw class="mr-2 h-3.5 w-3.5" />
+              Sync Items
+            </Button>
+          </DialogTrigger>
+          <DialogContent class="sm:max-w-md rounded-lg">
+            <DialogHeader class="space-y-3">
+              <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
+                 <LucideCopy class="w-5 h-5" />
+              </div>
+              <DialogTitle class="text-xl font-bold tracking-tight text-foreground">Clone Location Patterns</DialogTitle>
+              <DialogDescription class="text-xs font-medium text-muted-foreground leading-relaxed">
+                 Choose a source location to replicate categories and dishes into this branch. 
+                 <p class="mt-2 text-destructive font-bold uppercase tracking-widest text-[9px]">Potential data duplication if already synced.</p>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-6 pt-4">
+               <div class="space-y-1.5">
+                  <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Select Source Branch</Label>
+                  <Select v-model="sourceShopId">
+                    <SelectTrigger class="w-full h-11 rounded-lg border-border bg-background font-medium text-xs">
+                       <SelectValue placeholder="Selecting location..." />
+                    </SelectTrigger>
+                    <SelectContent class="rounded-lg border-border">
+                       <SelectItem 
+                         v-for="s in shopsResult?.items?.filter((s: any) => s.id !== currentShopId)" 
+                         :key="s.id" 
+                         :value="s.id" 
+                         class="text-xs font-bold py-2.5 rounded-md m-1"
+                       >
+                         {{ s.name }}
+                       </SelectItem>
+                    </SelectContent>
+                  </Select>
+               </div>
+
+               <div class="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+                  <Checkbox id="includeBranding" v-model:checked="includeBranding" class="rounded-md" />
+                  <div class="space-y-0.5">
+                    <Label for="includeBranding" class="text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">Clone Branding & Service</Label>
+                    <p class="text-[9px] text-muted-foreground font-medium">Replicates Logo, Address, Phone, and Hours.</p>
+                  </div>
+               </div>
+            </div>
+
+            <DialogFooter class="pt-6">
+              <Button variant="ghost" @click="isSyncModalOpen = false" class="rounded-lg h-10 text-xs font-bold">Discard</Button>
+              <Button :disabled="!sourceShopId || isSyncing" class="rounded-lg h-10 px-8 text-xs font-bold text-background bg-foreground" @click="handleSync">
+                <LucideLoader2 v-if="isSyncing" class="mr-2 h-4 w-4 animate-spin" />
+                Begin Synchronization
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog v-model:open="isModalOpen">
           <DialogTrigger as-child>
             <Button @click="openModal()" class="rounded-lg h-10 px-4" :disabled="!currentShopId || (categories && categories.length === 0)">
@@ -20,7 +78,7 @@
           </DialogTrigger>
           <DialogContent class="sm:max-w-md rounded-lg">
             <DialogHeader>
-              <DialogTitle class="text-xl font-bold tracking-tight">{{ form.id ? 'Edit Item' : 'Create Item' }}</DialogTitle>
+              <DialogTitle class="text-xl font-bold tracking-tight text-foreground">{{ form.id ? 'Edit Item' : 'Create Item' }}</DialogTitle>
               <DialogDescription class="text-xs font-medium">Update the details for this menu entry.</DialogDescription>
             </DialogHeader>
 
@@ -84,7 +142,7 @@
 
               <DialogFooter class="pt-2">
                 <Button type="button" variant="ghost" @click="isModalOpen = false" class="rounded-lg h-10 px-6 text-xs font-bold">Discard</Button>
-                <Button type="submit" :disabled="isSaving" class="rounded-lg h-10 px-8 text-xs font-bold">
+                <Button type="submit" :disabled="isSaving" class="rounded-lg h-10 px-8 text-xs font-bold text-background bg-foreground">
                   <LucideLoader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
                   {{ form.id ? 'Save Changes' : 'Confirm Entry' }}
                 </Button>
@@ -102,7 +160,7 @@
           <div class="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive mb-2">
             <LucideAlertTriangle class="w-5 h-5" />
           </div>
-          <DialogTitle class="text-xl font-bold tracking-tight">Delete Dish?</DialogTitle>
+          <DialogTitle class="text-xl font-bold tracking-tight text-foreground">Delete Dish?</DialogTitle>
           <DialogDescription class="text-xs font-medium text-muted-foreground leading-relaxed">
             Are you sure you want to remove <span class="text-foreground font-bold font-sans">"{{ itemToDelete?.name }}"</span> from the catalog? This cannot be undone.
           </DialogDescription>
@@ -240,7 +298,7 @@
 import { 
   Plus as LucidePlus, Image as LucideImage, Loader2 as LucideLoader2, 
   Pencil as LucidePencil, Trash2 as LucideTrash2, Globe as LucideGlobe, ExternalLink as LucideExternalLink,
-  AlertTriangle as LucideAlertTriangle
+  AlertTriangle as LucideAlertTriangle, RefreshCw as LucideRefreshCw, Copy as LucideCopy
 } from 'lucide-vue-next';
 import { Card } from '~/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '~/components/ui/table';
@@ -275,7 +333,11 @@ const user = useState<any>('user');
 const token = useCookie('token');
 const currentShopId = useState<string | null>('currentShopId');
 const isSaving = ref(false);
+const isSyncing = ref(false);
 const isModalOpen = ref(false);
+const isSyncModalOpen = ref(false);
+const sourceShopId = ref('');
+const includeBranding = ref(true);
 const fileInput = ref<HTMLInputElement | null>(null);
 const currentPage = ref(1);
 
@@ -294,7 +356,7 @@ const { data: shopsResult } = await useFetch<any>('/api/admin/shops', {
 });
 const currentShop = computed(() => shopsResult.value?.items?.find((s: any) => s.id === currentShopId.value));
 
-const { data: categoriesResult } = await useFetch<any>(() => 
+const { data: categoriesResult, refresh: refreshCategories } = await useFetch<any>(() => 
   currentShopId.value ? `/api/admin/categories?shopId=${currentShopId.value}&limit=100` : '/api/admin/categories?shopId=none',
   { headers: { Authorization: `Bearer ${token.value}` } }
 );
@@ -316,6 +378,48 @@ const openModal = (item: any = null) => {
     });
   }
   isModalOpen.value = true;
+};
+
+const handleSync = async () => {
+  if (!sourceShopId.value || !currentShopId.value) return;
+  isSyncing.value = true;
+  
+  const syncToastId = toast.loading('Synchronizing Catalog', {
+    description: 'Replicating categories and dishes...'
+  });
+
+  try {
+    await $fetch('/api/admin/menu/sync', {
+      method: 'POST',
+      body: {
+        sourceShopId: sourceShopId.value,
+        targetShopId: currentShopId.value,
+        includeBranding: includeBranding.value
+      },
+      headers: { Authorization: `Bearer ${token.value}` }
+    });
+
+    toast.success('Location Patterns Cloned', {
+      id: syncToastId,
+      description: 'The menu and branding are now live.'
+    });
+
+    isSyncModalOpen.value = false;
+    refreshItems();
+    refreshCategories();
+    
+    // Refresh shop data if branding was synced
+    if (includeBranding.value) {
+       window.location.reload(); 
+    }
+  } catch (e: any) {
+    toast.error('Sync failure', {
+      id: syncToastId,
+      description: e.data?.message || 'We could not clone the catalog.'
+    });
+  } finally {
+    isSyncing.value = false;
+  }
 };
 
 const uploadImage = async (event: any) => {
@@ -409,5 +513,6 @@ const copyLink = () => {
 watch(currentShopId, () => {
   currentPage.value = 1;
   refreshItems();
+  refreshCategories();
 });
 </script>
