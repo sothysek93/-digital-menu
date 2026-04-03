@@ -206,13 +206,50 @@
             <LucideCheck class="w-12 h-12 text-primary-foreground" />
           </div>
         </div>
-        <div class="space-y-2">
-          <h2 class="text-3xl font-black uppercase italic text-foreground tracking-tighter">Order Received</h2>
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <h2 class="text-3xl font-black uppercase italic text-foreground tracking-tighter">
+              {{ activeOrder?.status === 'completed' ? 'Order Completed' : 'Order Received' }}
+            </h2>
+            <div class="flex items-center justify-center gap-2">
+               <Badge v-if="activeOrder" variant="secondary" class="rounded-full px-3 py-1 text-[9px] uppercase font-black bg-primary/10 text-primary border-primary/20">
+                 {{ activeOrder.status }}
+               </Badge>
+               <p v-if="activeOrder" class="text-[9px] font-black uppercase text-muted-foreground tracking-widest italic">
+                 #{{ activeOrder.id.slice(-6).toUpperCase() }}
+               </p>
+            </div>
+          </div>
+          
           <p class="text-muted-foreground text-sm font-medium leading-relaxed">
-            Your table #{{ orderForm.table_number }} order is being prepared by our chefs right now.
+            Your table #{{ orderForm.table_number || activeOrder?.table_number }} order is being handled with care. 
           </p>
         </div>
-        <Button class="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px]" @click="orderSuccess = false">
+
+        <!-- Order Summary Checklist -->
+        <div v-if="activeOrder?.items" class="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4 max-h-[30vh] overflow-y-auto scrollbar-hide">
+           <div class="flex items-center justify-between border-b border-border/50 pb-3 mb-2">
+             <span class="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Selection Summary</span>
+             <span class="text-[10px] font-black uppercase tracking-widest text-primary italic font-mono">${{ activeOrder.total_price.toFixed(2) }}</span>
+           </div>
+           
+           <div class="space-y-3">
+              <div v-for="item in activeOrder.items" :key="item.id" class="flex items-center justify-between text-[11px] font-bold">
+                 <div class="flex items-center gap-3 italic">
+                    <span class="text-primary">{{ item.quantity }}x</span>
+                    <span class="text-foreground uppercase tracking-tight">{{ item.item_name }}</span>
+                 </div>
+                 <span class="text-muted-foreground/60 font-mono text-[9px]">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
+              </div>
+           </div>
+        </div>
+
+        <div v-else-if="isLoadingActiveOrder" class="py-8 flex flex-col items-center justify-center gap-3">
+           <LucideLoader2 class="w-6 h-6 text-primary animate-spin" />
+           <p class="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Synchronizing Ticket...</p>
+        </div>
+
+        <Button class="w-full h-15 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20" @click="orderSuccess = false">
            Back to Menu
         </Button>
       </div>
@@ -245,6 +282,7 @@ import { Button } from '~/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
+import { Badge } from '~/components/ui/badge';
 import { toast } from 'vue-sonner';
 
 const route = useRoute();
@@ -256,6 +294,32 @@ const isSheetOpen = ref(false);
 const orderSuccess = ref(false);
 const isSubmitting = ref(false);
 const activeCategory = ref('');
+const activeOrder = ref<any>(null);
+const isLoadingActiveOrder = ref(false);
+
+const fetchActiveOrder = async () => {
+    if (!persistedOrderId.value) return;
+    isLoadingActiveOrder.value = true;
+    try {
+        activeOrder.value = await $fetch(`/api/public/orders/${persistedOrderId.value}`);
+    } catch (e) {
+        console.error('Track order failed', e);
+    } finally {
+        isLoadingActiveOrder.value = false;
+    }
+};
+
+watch(orderSuccess, (val) => {
+    if (val && persistedOrderId.value) {
+        fetchActiveOrder();
+    }
+});
+
+onMounted(() => {
+    if (persistedOrderId.value) {
+        fetchActiveOrder();
+    }
+});
 
 const scrollToCategory = (catName: string) => {
   activeCategory.value = catName;

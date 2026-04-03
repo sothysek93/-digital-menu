@@ -39,6 +39,18 @@
             </div>
           </div>
 
+          <div class="px-6 py-6 border-b border-border/30 bg-muted/20">
+             <div class="grid col-span-1 gap-3">
+                <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between text-xs font-medium">
+                   <div class="flex items-center gap-3">
+                      <span class="w-6 h-6 rounded-lg bg-background border border-border flex items-center justify-center font-black text-[10px]">{{ item.quantity }}x</span>
+                      <span class="text-foreground uppercase tracking-tight">{{ item.item_name }}</span>
+                   </div>
+                   <span class="font-mono text-muted-foreground">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
+                </div>
+             </div>
+          </div>
+
           <div class="px-6 py-4 space-y-4">
              <!-- Order Action Buttons -->
              <div class="flex items-center gap-2">
@@ -111,6 +123,7 @@ interface Order {
   total_price: number;
   customer_name: string;
   created_at: string;
+  items: any[];
 }
 
 const { data: orders, refresh: refreshOrders, pending } = await useFetch<Order[]>(() => 
