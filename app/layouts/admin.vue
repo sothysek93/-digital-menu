@@ -1,119 +1,119 @@
 <template>
-  <div class="min-h-screen bg-background flex flex-col md:flex-row text-foreground selection:bg-primary selection:text-primary-foreground">
-    <!-- Desktop Sidebar -->
-    <aside class="hidden md:flex w-72 bg-card border-r border-border flex-col p-6 justify-between shrink-0 h-screen sticky top-0">
+  <div class="min-h-screen bg-background flex flex-col md:flex-row text-foreground selection:bg-primary selection:text-primary-foreground font-sans">
+    <!-- Clean Minimalist Sidebar -->
+    <aside class="hidden md:flex w-64 bg-background border-r border-border flex-col p-6 shrink-0 h-screen sticky top-0">
       <div class="space-y-8 flex-1 overflow-y-auto scrollbar-hide">
-        <div class="flex items-center gap-3 px-2">
-          <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform hover:rotate-6">
-            <LucideLayoutGrid class="w-5 h-5 text-primary-foreground" />
+        <div class="flex items-center gap-3 px-1">
+          <div class="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+            <LucideLayoutGrid class="w-4 h-4 text-background" />
           </div>
           <div>
-            <h2 class="text-[12px] font-black uppercase tracking-[0.2em] leading-none mb-1 text-foreground">D-MENU</h2>
-            <p class="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em] leading-none">Console Core</p>
+            <h2 class="text-xs font-bold uppercase tracking-wider leading-none text-foreground">Admin Console</h2>
+            <p class="text-[9px] text-muted-foreground font-semibold uppercase tracking-tight mt-1">Digital Menu v1.0</p>
           </div>
         </div>
 
-        <!-- Shop Selector -->
-        <div class="px-2 space-y-3">
-          <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-1 block">Active Location</Label>
-          <div v-if="pendingShops" class="h-11 bg-muted/50 animate-pulse rounded-2xl border border-border/50"></div>
+        <!-- Minimalist Shop Context -->
+        <div class="px-1 space-y-2">
+          <Label class="text-[10px] font-bold uppercase text-muted-foreground ml-0.5 mb-1.5 block tracking-widest">Active Store</Label>
+          <div v-if="pendingShops" class="h-10 bg-muted animate-pulse rounded-lg border border-border"></div>
           <Select v-else :model-value="currentShopId || ''" @update:model-value="onShopChange">
-            <SelectTrigger class="w-full bg-muted border-border h-11 rounded-2xl text-[10px] font-black uppercase tracking-widest px-4 hover:bg-muted/80 transition-colors">
+            <SelectTrigger class="w-full bg-background border-border h-10 rounded-lg text-xs font-medium px-3 hover:bg-accent transition-colors">
               <SelectValue :placeholder="shops?.length ? 'Selecting...' : 'No Locations'" />
             </SelectTrigger>
-            <SelectContent class="rounded-2xl border-border bg-popover">
-              <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-[10px] font-black uppercase tracking-widest rounded-xl m-1 py-3 px-4">
+            <SelectContent class="rounded-lg border-border bg-popover">
+              <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium rounded-md m-1 py-2 pr-2 pl-8">
                 {{ shop.name }}
               </SelectItem>
-              <SelectSeparator class="bg-border/50" />
-              <NuxtLink to="/admin/shops" class="flex items-center w-full px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all rounded-xl m-1">
-                <LucidePlus class="w-3.5 h-3.5 mr-3" />
+              <SelectSeparator class="bg-border" />
+              <NuxtLink to="/admin/shops" class="flex items-center w-full px-5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-md m-1">
+                <LucidePlus class="w-3.5 h-3.5 mr-2" />
                 Manage Branches
               </NuxtLink>
             </SelectContent>
           </Select>
         </div>
         
-        <nav class="space-y-1.5 px-1">
+        <nav class="space-y-1">
           <Button 
             v-for="link in navLinks" 
             :key="link.to"
             as-child
             variant="ghost"
-            class="w-full justify-start h-12 rounded-2xl px-4 gap-4 transition-all hover:bg-muted group"
-            :class="{ 'bg-primary/5 text-primary shadow-sm border border-primary/10': route.path === link.to, 'text-muted-foreground': route.path !== link.to }"
+            class="w-full justify-start h-10 rounded-lg px-3 gap-3 transition-colors hover:bg-accent"
+            :class="{ 'bg-accent text-accent-foreground font-bold': route.path === link.to, 'text-muted-foreground': route.path !== link.to }"
           >
             <NuxtLink :to="link.to">
-              <component :is="link.icon" class="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span class="text-[10px] font-black uppercase tracking-[0.1em]">{{ link.label }}</span>
+              <component :is="link.icon" class="w-4 h-4 shrink-0" />
+              <span class="text-xs">{{ link.label }}</span>
             </NuxtLink>
           </Button>
         </nav>
       </div>
 
       <div class="pt-6 border-t border-border space-y-6">
-        <div class="flex items-center gap-3 px-3">
-          <div class="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black uppercase text-foreground shadow-sm">
+        <div class="flex items-center gap-3 px-1">
+          <div class="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-bold text-foreground">
             {{ user?.name?.charAt(0) || 'U' }}
           </div>
           <div class="overflow-hidden">
-            <p class="text-[11px] font-black uppercase tracking-widest truncate text-foreground">{{ user?.name }}</p>
-            <p class="text-[9px] text-muted-foreground font-bold truncate italic opacity-60 uppercase tracking-tighter">{{ user?.email }}</p>
+            <p class="text-xs font-bold truncate text-foreground">{{ user?.name }}</p>
+            <p class="text-[10px] text-muted-foreground truncate font-medium">{{ user?.email }}</p>
           </div>
         </div>
         
         <Button 
           variant="ghost" 
-          class="w-full justify-start h-12 rounded-2xl px-4 gap-4 text-destructive/60 hover:bg-destructive/5 hover:text-destructive group transition-all"
+          class="w-full justify-start h-10 rounded-lg px-3 gap-3 text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors group"
           @click="handleLogout"
         >
-          <LucideLogOut class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          <span class="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+          <LucideLogOut class="w-4 h-4" />
+          <span class="text-xs font-medium">Log Out</span>
         </Button>
       </div>
     </aside>
 
     <!-- Mobile Header -->
-    <header class="md:hidden bg-card border-b border-border p-4 flex items-center justify-between sticky top-0 z-50">
+    <header class="md:hidden bg-background border-b border-border p-4 flex items-center justify-between sticky top-0 z-50">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md">
-          <LucideLayoutGrid class="w-4 h-4 text-primary-foreground" />
+        <div class="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+          <LucideLayoutGrid class="w-4 h-4 text-background" />
         </div>
-        <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">D-MENU</h2>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-foreground">Admin</h2>
       </div>
       <Sheet>
         <SheetTrigger as-child>
-          <Button variant="ghost" size="icon" class="rounded-full">
-            <LucideMenu class="w-5 h-5" />
+          <Button variant="outline" size="icon" class="rounded-lg h-9 w-9">
+            <LucideMenu class="w-4 h-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" class="w-80 p-6 flex flex-col bg-card border-r border-border z-[200]">
-           <div class="flex-1 space-y-10">
-             <div class="space-y-4">
-                <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Location Context</Label>
+        <SheetContent side="left" class="w-72 p-6 flex flex-col bg-background border-r border-border z-[200]">
+           <div class="flex-1 space-y-8">
+             <div class="space-y-2 px-1">
+                <Label class="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-0.5">Location Manager</Label>
                 <Select :model-value="currentShopId || ''" @update:model-value="onShopChange">
-                  <SelectTrigger class="w-full bg-muted border-border h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest px-4">
+                  <SelectTrigger class="w-full bg-background border-border h-11 rounded-lg text-xs font-medium px-4">
                     <SelectValue placeholder="Selecting..." />
                   </SelectTrigger>
-                  <SelectContent class="rounded-2xl border-border bg-popover">
-                    <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-xl m-1">
+                  <SelectContent class="rounded-lg border-border bg-popover">
+                    <SelectItem v-for="shop in (shops as any[]) || []" :key="shop.id" :value="shop.id" class="text-xs font-medium py-2.5 px-4 rounded-md m-1">
                       {{ shop.name }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
              </div>
-             <nav class="space-y-2">
+             <nav class="space-y-1">
                 <Button 
                   v-for="link in navLinks" 
                   :key="link.to"
                   as-child
                   variant="ghost"
-                  class="w-full justify-start h-12 rounded-2xl px-4 gap-4"
-                  :class="{ 'bg-primary/5 text-primary border border-primary/10 shadow-sm': route.path === link.to, 'text-muted-foreground': route.path !== link.to }"
+                  class="w-full justify-start h-11 rounded-lg px-4 gap-4"
+                  :class="{ 'bg-accent text-accent-foreground font-bold': route.path === link.to, 'text-muted-foreground': route.path !== link.to }"
                 >
                   <NuxtLink :to="link.to">
                     <component :is="link.icon" class="w-4 h-4" />
-                    <span class="text-[10px] font-black uppercase tracking-widest">{{ link.label }}</span>
+                    <span class="text-xs">{{ link.label }}</span>
                   </NuxtLink>
                 </Button>
               </nav>
@@ -122,20 +122,20 @@
            <div class="pt-6 border-t border-border mt-auto">
              <Button 
                 variant="ghost" 
-                class="w-full justify-start h-12 rounded-2xl px-4 gap-4 text-destructive/60 hover:bg-destructive/5 hover:text-destructive"
+                class="w-full justify-start h-11 rounded-lg px-4 gap-4 text-muted-foreground hover:bg-destructive/5 hover:text-destructive"
                 @click="handleLogout"
               >
                 <LucideLogOut class="w-4 h-4" />
-                <span class="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+                <span class="text-xs font-medium tracking-tight">Log Out</span>
               </Button>
            </div>
         </SheetContent>
       </Sheet>
     </header>
 
-    <!-- Content Area -->
-    <main class="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto relative">
-      <div class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 md:p-8 lg:p-12 overflow-y-auto">
+      <div class="max-w-5xl mx-auto animate-in fade-in duration-500">
         <slot />
       </div>
     </main>

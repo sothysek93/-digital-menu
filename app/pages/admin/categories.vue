@@ -1,40 +1,41 @@
 <template>
-  <div class="space-y-8 animate-in fade-in duration-500">
+  <div class="space-y-8 animate-in fade-in duration-500 pb-12">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h2 class="text-3xl font-bold tracking-tight text-foreground">Menu Categories</h2>
-        <p class="text-muted-foreground text-sm">Organize your shop catalog into logical groups.</p>
+        <p class="text-muted-foreground text-sm font-medium">Structure your catalog with logical groupings.</p>
       </div>
 
       <Dialog v-model:open="isModalOpen">
         <DialogTrigger as-child>
-          <Button @click="openModal()" class="rounded-full shadow-lg" :disabled="!currentShopId">
+          <Button @click="openModal()" class="rounded-lg h-10 px-4" :disabled="!currentShopId">
             <LucidePlus class="mr-2 h-4 w-4" />
             Add Category
           </Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-md">
+        <DialogContent class="sm:max-w-md rounded-lg">
           <DialogHeader>
-            <DialogTitle>{{ form.id ? 'Edit Category' : 'New Category' }}</DialogTitle>
-            <DialogDescription>Input classification details for your menu items.</DialogDescription>
+            <DialogTitle class="text-xl font-bold tracking-tight">{{ form.id ? 'Edit Category' : 'New Category' }}</DialogTitle>
+            <DialogDescription class="text-xs font-medium">Define a new classification for your dishes.</DialogDescription>
           </DialogHeader>
 
-          <form @submit.prevent="saveCategory" class="space-y-4 pt-4">
-            <div class="space-y-2">
-              <Label for="cat_name">Category Name</Label>
-              <Input id="cat_name" v-model="form.name" placeholder="E.g. Main Courses, Drinks, Desserts" required />
+          <form @submit.prevent="saveCategory" class="space-y-5 pt-3">
+            <div class="space-y-1.5">
+               <Label class="text-xs font-bold text-muted-foreground px-0.5">Category Name</Label>
+               <Input v-model="form.name" placeholder="Desserts, Drinks..." required class="h-10 rounded-lg bg-background" />
             </div>
 
-            <div class="space-y-2">
-               <Label for="cat_order">Display Priority (Higher = First)</Label>
-               <Input id="cat_order" v-model.number="form.order_index" type="number" required />
+            <div class="space-y-1.5">
+               <Label class="text-xs font-bold text-muted-foreground px-0.5">Display Priority</Label>
+               <Input v-model.number="form.order_index" type="number" required class="h-10 rounded-lg bg-background" />
+               <p class="text-[10px] text-muted-foreground font-medium px-0.5">Higher numbers appear first in the menu.</p>
             </div>
 
-            <DialogFooter class="pt-4">
-              <Button type="button" variant="ghost" @click="isModalOpen = false">Cancel</Button>
-              <Button type="submit" :disabled="isSaving">
+            <DialogFooter class="pt-2">
+              <Button type="button" variant="ghost" @click="isModalOpen = false" class="rounded-lg h-10 px-6 text-xs font-bold">Cancel</Button>
+              <Button type="submit" :disabled="isSaving" class="rounded-lg h-10 px-8 text-xs font-bold">
                 <LucideLoader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
-                {{ form.id ? 'Save Changes' : 'Create Category' }}
+                {{ form.id ? 'Save Changes' : 'Confirm' }}
               </Button>
             </DialogFooter>
           </form>
@@ -44,60 +45,55 @@
 
     <!-- Delete Confirmation Dialog -->
     <Dialog v-model:open="isDeleteModalOpen">
-      <DialogContent class="sm:max-w-md bg-card border-border rounded-[32px] p-8">
+      <DialogContent class="sm:max-w-md rounded-lg p-8">
         <DialogHeader class="space-y-3">
-          <div class="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive mb-2">
-            <LucideAlertTriangle class="w-6 h-6" />
+          <div class="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive mb-2">
+            <LucideAlertTriangle class="w-5 h-5" />
           </div>
-          <DialogTitle class="text-2xl font-black uppercase italic tracking-tighter">Confirm Deletion</DialogTitle>
-          <DialogDescription class="text-sm font-medium italic text-muted-foreground leading-relaxed">
-            Are you sure you want to permanently delete <span class="text-foreground font-bold font-sans not-italic">"{{ categoryToDelete?.name }}"</span>?
-            <br/><br/>
-            All menu items associated with this category will lose their classification.
+          <DialogTitle class="text-xl font-bold tracking-tight">Remove Category?</DialogTitle>
+          <DialogDescription class="text-xs font-medium text-muted-foreground leading-relaxed">
+            Are you sure you want to delete <span class="text-foreground font-bold">"{{ categoryToDelete?.name }}"</span>? Menu items in this category will become unclassified.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter class="flex flex-row gap-3 pt-6 border-t border-border/50">
-          <Button variant="ghost" @click="isDeleteModalOpen = false" class="flex-1 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest">Keep It</Button>
-          <Button variant="destructive" @click="confirmDelete" class="flex-1 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20">
+        <DialogFooter class="flex flex-row gap-2 pt-6 border-t border-border">
+          <Button variant="ghost" @click="isDeleteModalOpen = false" class="flex-1 rounded-lg h-10 text-xs font-bold">Discard</Button>
+          <Button variant="destructive" @click="confirmDelete" class="flex-1 rounded-lg h-10 text-xs font-bold">
             <LucideLoader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
-            Delete Forever
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
-    <Card class="border-border shadow-sm overflow-hidden">
-      <CardHeader>
-        <CardTitle class="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Classification</CardTitle>
-      </CardHeader>
+    <Card class="border border-border shadow-none overflow-hidden rounded-lg">
       <Table>
-        <TableHeader>
+        <TableHeader class="bg-muted/50">
           <TableRow>
-            <TableHead>Category Name</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class="text-[10px] font-bold uppercase tracking-wider">Classification</TableHead>
+            <TableHead class="text-[10px] font-bold uppercase tracking-wider">Weight</TableHead>
+            <TableHead class="text-right text-[10px] font-bold uppercase tracking-wider">Control</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="category in categories" :key="category.id" class="group transition-colors hover:bg-muted/50">
-            <TableCell class="font-medium text-foreground tracking-tight">{{ category.name }}</TableCell>
+          <TableRow v-for="category in categories" :key="category.id" class="hover:bg-muted/30 transition-colors">
+            <TableCell class="font-bold text-xs text-foreground tracking-tight">{{ category.name }}</TableCell>
             <TableCell>
-              <Badge variant="secondary" class="rounded-full px-3 font-mono">{{ category.order_index }}</Badge>
+              <Badge variant="secondary" class="rounded-md px-2 font-mono text-[10px] h-5">{{ category.order_index }}</Badge>
             </TableCell>
             <TableCell class="text-right">
               <div class="flex justify-end gap-1">
-                <Button variant="ghost" size="icon" class="rounded-full h-8 w-8 text-muted-foreground hover:text-foreground" @click="openModal(category)">
+                <Button variant="ghost" size="icon" class="rounded-lg h-8 w-8 text-muted-foreground hover:text-foreground" @click="openModal(category)">
                    <LucidePencil class="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" class="rounded-full h-8 w-8 text-destructive/60 hover:text-destructive hover:bg-destructive/10" @click="deleteCategory(category)">
+                <Button variant="ghost" size="icon" class="rounded-full h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteCategory(category)">
                    <LucideTrash2 class="h-3.5 w-3.5" />
                 </Button>
               </div>
             </TableCell>
           </TableRow>
           <TableRow v-if="!pending && (categories?.length || 0) === 0">
-            <TableCell colspan="3" class="h-40 text-center text-muted-foreground italic">
-              {{ !currentShopId ? 'Please select a shop location to begin' : 'No categories created for this location yet.' }}
+            <TableCell colspan="3" class="h-40 text-center text-muted-foreground text-xs font-medium italic">
+              {{ !currentShopId ? 'Select a store location' : 'Category list is clear' }}
             </TableCell>
           </TableRow>
         </TableBody>

@@ -228,7 +228,7 @@
 import { 
   ChefHat as LucideChefHat, Search as LucideSearch, Plus as LucidePlus, ShoppingCart as LucideShoppingCart,
   Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo,
-  Check as LucideCheck, Eye as LucideEye
+  Check as LucideCheck, Eye as LucideEye, XCircle as LucideXCircle
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Card } from '~/components/ui';
@@ -241,63 +241,15 @@ const route = useRoute();
 const slug = route.params.slug as string;
 const table = ref(route.query.table as string || '');
 
-// UI state
+// Core State
 const isSheetOpen = ref(false);
 const orderSuccess = ref(false);
 const isSubmitting = ref(false);
 const activeCategory = ref('');
 const activeOrder = ref<any>(null);
 const isLoadingActiveOrder = ref(false);
-
-const fetchActiveOrder = async () => {
-    if (!persistedOrderId.value) return;
-    isLoadingActiveOrder.value = true;
-    try {
-        activeOrder.value = await $fetch(`/api/public/orders/${persistedOrderId.value}`);
-    } catch (e) {
-        console.error('Track order failed', e);
-    } finally {
-        isLoadingActiveOrder.value = false;
-    }
-};
-
-watch(orderSuccess, (val) => {
-    if (val && persistedOrderId.value) {
-        fetchActiveOrder();
-    }
-});
-
-// Local Order Persistence
-const scrollToCategory = (catName: string) => {
-  activeCategory.value = catName;
-  const el = document.getElementById(`cat-${catName}`);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-  }
-};
-
+const cart = useState<any[]>('menu-cart', () => []);
 const persistedOrderId = useState<string | null>('active-order-id', () => null);
-
-onMounted(() => {
-    // Hydrate state from localStorage on mount (Client-side only)
-    if (process.client) {
-        // 1. Hydrate Order Tracking
-        const lastId = localStorage.getItem('last_order_id');
-        if (lastId) {
-            persistedOrderId.value = lastId;
-            fetchActiveOrder();
-        }
-
-        // 2. Hydrate Cart
-        const savedBasket = localStorage.getItem(`basket_v1_${slug}`);
-        if (savedBasket && cart.value.length === 0) {
-            try { 
-                const parsed = JSON.parse(savedBasket); 
-                if (Array.isArray(parsed)) cart.value = parsed;
-            } catch (e) { console.error('Basket hydration failed', e); }
-        }
-    }
-});
 
 // Fetch Menu Data
 const { data, pending } = await useFetch<any>(`/api/public/menu?slug=${slug}` as any, {
@@ -316,32 +268,77 @@ const groupedMenu = computed(() => {
   return groups;
 });
 
-// Cart Logic (Persistent via LocalStorage on Client)
-const cart = useState<any[]>('menu-cart', () => []);
+// Cart Metrics
 const cartTotalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
 const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
 
-onMounted(() => {
-    // Hydrate cart from localStorage on mount (Client-side only)
-    if (process.client) {
-        const saved = localStorage.getItem(`basket_v1_${slug}`);
-        if (saved && cart.value.length === 0) {
-            try { 
-                const parsed = JSON.parse(saved); 
-                if (Array.isArray(parsed)) cart.value = parsed;
-            } catch (e) {
-                console.error('Failed to hydrate basket', e);
-            }
+// Logic: Fetch Active Order Status
+const fetchActiveOrder = async () => {
+    if (!persistedOrderId.value) return;
+    isLoadingActiveOrder.value = true;
+    try {
+        const order = await $fetch(`/api/public/orders/${persistedOrderId.value}`);
+        activeOrder.value = order;
+        // If order is completed or cancelled, we don't need to track it as heavily
+        if (order && ['completed', 'cancelled'].includes(order.status)) {
+            // Keep it in state so user can see last order, but maybe stop polling?
         }
+    } catch (e) {
+        console.error('Track order failed', e);
+        // Clear if not found to stop spinning forever
+        persistedOrderId.value = null;
+        if (process.client) localStorage.removeItem('last_order_id');
+    } finally {
+        isLoadingActiveOrder.value = false;
     }
+};
+
+// Lifecycle: Unified Hydration
+let pollTimer: any = null;
+
+onMounted(() => {
+  if (process.client) {
+    // 1. Hydrate Cart
+    const savedBasket = localStorage.getItem(`basket_v1_${slug}`);
+    if (savedBasket && cart.value.length === 0) {
+      try { 
+        const parsed = JSON.parse(savedBasket); 
+        if (Array.isArray(parsed)) cart.value = parsed;
+      } catch (e) { console.error('Basket hydration failed', e); }
+    }
+
+    // 2. Hydrate Order Tracking
+    const lastId = localStorage.getItem('last_order_id');
+    if (lastId) {
+      persistedOrderId.value = lastId;
+      fetchActiveOrder();
+      // Start Polling for status updates
+      pollTimer = setInterval(() => {
+        if (persistedOrderId.value && !isLoadingActiveOrder.value) {
+            fetchActiveOrder();
+        }
+      }, 10000);
+    }
+  }
 });
 
-// Watch and Persist Cart Changes
-if (process.client) {
-    watch(cart, (newCart) => {
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer);
+});
+
+// Watch: Persist Cart Changes
+watch(cart, (newCart) => {
+    if (process.client) {
         localStorage.setItem(`basket_v1_${slug}`, JSON.stringify(newCart));
-    }, { deep: true });
-}
+    }
+}, { deep: true });
+
+// Actions
+const scrollToCategory = (catName: string) => {
+  activeCategory.value = catName;
+  const el = document.getElementById(`cat-${catName}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+};
 
 const addToCart = (item: any) => {
   const existing = cart.value.find(i => i.id === item.id);
@@ -350,10 +347,7 @@ const addToCart = (item: any) => {
   } else {
     cart.value.push({ ...item, quantity: 1 });
   }
-  
-  toast.success('Selection Captured', {
-    description: `${item.name} is now in your basket.`
-  });
+  toast.success('Added to basket', { description: `${item.name} is ready.` });
 };
 
 const removeFromCart = (id: string) => {
@@ -361,45 +355,34 @@ const removeFromCart = (id: string) => {
   if (existingIndex > -1) {
     const item = cart.value[existingIndex];
     item.quantity--;
-    if (item.quantity === 0) {
-      cart.value.splice(existingIndex, 1);
-      toast.info('Item Discarded', {
-          description: 'The selection has been removed from your basket.'
-      });
-    }
+    if (item.quantity === 0) cart.value.splice(existingIndex, 1);
   }
 };
 
-// Order Submission
 const orderForm = reactive({
   customer_name: '',
   table_number: table.value,
   notes: ''
 });
 
-// Sync table from URL
 watch(() => route.query.table, (newTable) => {
-  if (newTable) table.value = newTable as string;
-  orderForm.table_number = table.value;
+  if (newTable) {
+      table.value = newTable as string;
+      orderForm.table_number = table.value;
+  }
 });
 
 const submitOrder = async () => {
-  if (cart.value.length === 0 || !orderForm.table_number) {
-    toast.error('Identification Needed', { description: 'Please provide your table number to proceed.' });
-    return;
-  }
+  if (cart.value.length === 0 || !orderForm.table_number) return;
   
   isSubmitting.value = true;
   try {
-    const shopId = data.value?.shop?.id;
-    
     const res = await $fetch('/api/public/orders' as any, {
       method: 'POST',
       body: {
-        shop_id: shopId,
+        shop_id: data.value?.shop?.id,
         table_number: orderForm.table_number,
         customer_name: orderForm.customer_name,
-        notes: orderForm.notes,
         items: cart.value.map(i => ({
           menu_item_id: i.id,
           quantity: i.quantity,
@@ -411,28 +394,23 @@ const submitOrder = async () => {
     if (res.id) {
         localStorage.setItem('last_order_id', res.id);
         persistedOrderId.value = res.id;
+        fetchActiveOrder();
     }
 
-    toast.success('Order Dispatched', {
-        description: 'Our kitchen has received your ticket.'
-    });
-
+    toast.success('Order Sent', { description: 'Kitchen notified.' });
     orderSuccess.value = true;
     isSheetOpen.value = false;
     cart.value = [];
-    if (process.client) {
-        localStorage.removeItem(`basket_v1_${slug}`);
-    }
+    if (process.client) localStorage.removeItem(`basket_v1_${slug}`);
   } catch (e: any) {
-    toast.error('Dispatch Failed', { 
-        description: e.data?.message || 'We could not transmit your order. Please check your connection.' 
-    });
+    toast.error('Failed to order', { description: e.data?.message || 'Check connection.' });
   } finally {
     isSubmitting.value = false;
   }
 };
 
 const viewRecentOrder = () => {
+    fetchActiveOrder();
     orderSuccess.value = true;
 };
 </script>

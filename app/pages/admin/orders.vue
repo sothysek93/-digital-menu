@@ -2,97 +2,83 @@
   <div class="space-y-8 pb-20 animate-in fade-in duration-500">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold tracking-tight text-foreground">Live Orders</h2>
-        <p class="text-muted-foreground text-sm">Real-time incoming orders from your QR menu.</p>
+        <h2 class="text-3xl font-bold tracking-tight text-foreground">Live Queue</h2>
+        <p class="text-muted-foreground text-sm font-medium">Real-time incoming orders from the digital menu.</p>
       </div>
-      <div v-if="pending" class="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+      <div v-if="pending" class="flex items-center gap-2 text-foreground text-[10px] font-bold uppercase tracking-widest bg-accent px-3 py-1.5 rounded-md border border-border">
          <LucideLoader2 class="w-3 h-3 animate-spin" />
-         Updating...
+         Updating
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- High Priority / New Orders -->
-      <div class="lg:col-span-2 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div class="lg:col-span-3 space-y-4">
         <div v-for="order in sortedOrders" :key="order.id" 
-          class="bg-card border border-border rounded-3xl overflow-hidden shadow-sm hover:border-primary/30 transition-all group"
+          class="bg-background border border-border rounded-lg overflow-hidden flex flex-col sm:flex-row items-stretch"
         >
-          <div class="p-6 flex items-start justify-between border-b border-border/50">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-black text-lg shadow-lg group-hover:scale-105 transition-transform">
-                #{{ order.table_number || '?' }}
-              </div>
-              <div>
-                <p class="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">
-                  Table Order • {{ formatTime(order.created_at) }}
-                </p>
-                <h3 class="font-bold text-foreground text-lg leading-tight uppercase">
-                  {{ order.customer_name || 'Guest' }}
-                </h3>
-              </div>
-            </div>
-            <div class="flex flex-col items-end gap-2 text-right">
-              <Badge :variant="getStatusVariant(order.status)" class="rounded-full px-3 py-1 text-[10px] uppercase font-black tracking-widest shadow-sm">
-                {{ order.status }}
-              </Badge>
-              <p class="font-mono font-bold text-foreground tracking-tighter text-lg">${{ order.total_price?.toFixed(2) }}</p>
-            </div>
+          <div class="p-6 flex flex-col items-center justify-center bg-muted/30 border-b sm:border-b-0 sm:border-r border-border min-w-[120px]">
+            <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Table</span>
+            <span class="text-3xl font-bold text-foreground">#{{ order.table_number || '?' }}</span>
+             <Badge :variant="getStatusVariant(order.status)" class="mt-4 rounded-md px-2 py-0.5 text-[9px] uppercase font-bold tracking-wider">
+               {{ order.status }}
+             </Badge>
           </div>
 
-          <div class="px-6 py-6 border-b border-border/30 bg-muted/20">
-             <div class="grid col-span-1 gap-3">
-                <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between text-xs font-medium">
-                   <div class="flex items-center gap-3">
-                      <span class="w-6 h-6 rounded-lg bg-background border border-border flex items-center justify-center font-black text-[10px]">{{ item.quantity }}x</span>
-                      <span class="text-foreground uppercase tracking-tight">{{ item.item_name }}</span>
+          <div class="flex-1 flex flex-col">
+            <div class="p-4 border-b border-border flex items-center justify-between bg-background">
+               <div class="flex flex-col">
+                  <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{{ formatTime(order.created_at) }}</span>
+                  <span class="text-sm font-bold text-foreground uppercase tracking-tight">{{ order.customer_name || 'Guest User' }}</span>
+               </div>
+               <span class="font-mono text-sm font-bold text-foreground">${{ order.total_price?.toFixed(2) }}</span>
+            </div>
+            
+            <div class="p-4 flex-1 space-y-2 bg-muted/5">
+                <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                   <div class="flex items-center gap-2">
+                      <span class="text-foreground font-bold">×{{ item.quantity }}</span>
+                      <span class="uppercase tracking-tight">{{ item.item_name }}</span>
                    </div>
-                   <span class="font-mono text-muted-foreground">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
+                   <span class="font-mono text-[10px] opacity-60">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
                 </div>
-             </div>
-          </div>
+            </div>
 
-          <div class="px-6 py-4 space-y-4">
-             <!-- Order Action Buttons -->
-             <div class="flex items-center gap-2">
-               <Button v-if="order.status === 'pending'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 bg-primary text-primary-foreground hover:translate-y-[-2px] transition-transform" @click="updateStatus(order.id, 'preparing', 'Order Accepted')">
-                 Accept & Prepare
+            <div class="p-4 border-t border-border bg-background flex items-center gap-2">
+               <Button v-if="order.status === 'pending'" size="sm" class="flex-1 rounded-lg font-bold uppercase tracking-widest text-[9px] h-9" @click="updateStatus(order.id, 'preparing', 'Order Accepted')">
+                 Accept Order
                </Button>
-               <Button v-if="order.status === 'preparing'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 bg-primary text-primary-foreground hover:translate-y-[-2px] transition-transform" @click="updateStatus(order.id, 'served', 'Order Served')">
-                 Mark as Served
+               <Button v-if="order.status === 'preparing'" size="sm" class="flex-1 rounded-lg font-bold uppercase tracking-widest text-[9px] h-9" @click="updateStatus(order.id, 'served', 'Order Served')">
+                 Ready to Serve
                </Button>
-               <Button v-if="order.status === 'served'" size="sm" class="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 border-primary/50 text-foreground" variant="outline" @click="updateStatus(order.id, 'completed', 'Order Completed')">
+               <Button v-if="order.status === 'served'" size="sm" class="flex-1 rounded-lg font-bold uppercase tracking-widest text-[9px] h-9" @click="updateStatus(order.id, 'completed', 'Order Completed')">
                  Complete
                </Button>
-               <Button variant="ghost" size="icon" class="h-10 w-10 text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-xl" @click="updateStatus(order.id, 'cancelled', 'Order Cancelled')">
-                 <LucideXCircle class="w-5 h-5" />
+               <Button variant="outline" size="icon" class="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 border-border" @click="updateStatus(order.id, 'cancelled', 'Order Cancelled')">
+                 <LucideXCircle class="w-4 h-4" />
                </Button>
-             </div>
+            </div>
           </div>
         </div>
 
-        <div v-if="!pending && (orders?.length || 0) === 0" class="py-40 text-center border-2 border-dashed border-border rounded-3xl bg-muted/20">
-           <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-              <LucideShoppingCart class="w-8 h-8 text-muted-foreground/30" />
+        <div v-if="!pending && (orders?.length || 0) === 0" class="py-32 text-center border border-dashed border-border rounded-lg bg-muted/10">
+           <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
+              <LucideShoppingCart class="w-5 h-5 text-muted-foreground/40" />
            </div>
-           <p class="text-muted-foreground text-sm font-medium italic">No active orders found in the queue.</p>
+           <p class="text-muted-foreground text-xs font-bold uppercase tracking-tighter">Queue is empty</p>
         </div>
       </div>
 
-      <!-- Stats / Sidebar -->
-      <div class="space-y-6">
-        <Card class="border-none rounded-3xl p-8 bg-primary text-primary-foreground shadow-2xl overflow-hidden relative group">
-          <div class="absolute -right-16 -top-16 w-48 h-48 bg-white/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <div class="relative z-10">
-            <p class="text-[10px] font-black uppercase tracking-widest text-primary-foreground/40 mb-8">Service Metrics</p>
-            <div class="grid grid-cols-2 gap-8">
-              <div>
-                <p class="text-4xl font-black italic tracking-tighter">{{ pendingCount }}</p>
-                <p class="text-[9px] font-black uppercase tracking-widest text-primary-foreground/60 mt-1">Pending</p>
-              </div>
-              <div>
-                <p class="text-4xl font-black italic tracking-tighter">{{ preparingCount }}</p>
-                <p class="text-[9px] font-black uppercase tracking-widest text-primary-foreground/60 mt-1">Cooking</p>
-              </div>
+      <div class="space-y-4">
+        <Card class="border border-border rounded-lg p-6 bg-foreground text-background shadow-none">
+          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-background/60 mb-6">Service Load</p>
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-1">
+              <p class="text-3xl font-bold tracking-tight">{{ pendingCount }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wide opacity-60">Pending</p>
+            </div>
+            <div class="space-y-1">
+              <p class="text-3xl font-bold tracking-tight">{{ preparingCount }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wide opacity-60">Active</p>
             </div>
           </div>
         </Card>

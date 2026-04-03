@@ -1,22 +1,22 @@
 <template>
-  <div class="space-y-10 selection:bg-primary selection:text-primary-foreground pb-32 animate-in fade-in duration-500">
+  <div class="space-y-8 animate-in fade-in duration-500 pb-20">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div class="space-y-1.5 px-1">
-        <h2 class="text-4xl font-black tracking-tighter text-foreground uppercase italic leading-none">Shop Configuration</h2>
-        <p class="text-muted-foreground text-xs font-bold uppercase tracking-widest leading-none">Refine your identity and operational parameters.</p>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
+      <div class="space-y-1">
+        <h2 class="text-3xl font-bold tracking-tight text-foreground leading-none">Shop Settings</h2>
+        <p class="text-muted-foreground text-sm font-medium">Refine your identity and operational parameters.</p>
       </div>
       
       <div class="flex items-center gap-3">
-         <div v-if="!currentShopId" class="px-6 py-3 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-center gap-3 text-destructive text-[10px] font-black uppercase tracking-widest shadow-sm">
-            <LucideAlertCircle class="w-4 h-4" />
-            Select Shop context
+         <div v-if="!currentShopId" class="px-4 py-2 bg-destructive/5 rounded-lg border border-destructive/10 flex items-center gap-2 text-destructive text-[10px] font-bold uppercase tracking-wider">
+            <LucideAlertCircle class="w-3.5 h-3.5" />
+            Select a store location
          </div>
          <Button 
            v-if="currentShopId" 
            @click="saveSettings" 
            :disabled="isSaving" 
-           class="h-13 px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl hover:translate-y-[-2px] transition-all"
+           class="h-10 px-6 rounded-lg bg-foreground text-background font-bold text-xs uppercase tracking-widest"
          >
             <LucideLoader2 v-if="isSaving" class="mr-2 h-3.5 w-3.5 animate-spin" />
             <LucideSave v-else class="mr-2 h-3.5 w-3.5" />
@@ -26,46 +26,45 @@
     </div>
 
     <Tabs v-if="currentShopId" default-value="branding" class="w-full">
-      <TabsList class="grid w-full grid-cols-3 md:w-[400px] h-12 p-1 bg-muted rounded-2xl mb-8">
-        <TabsTrigger value="branding" class="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Branding</TabsTrigger>
-        <TabsTrigger value="location" class="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Location</TabsTrigger>
-        <TabsTrigger value="qrcode" class="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">QR Engine</TabsTrigger>
+      <TabsList class="grid w-full grid-cols-3 md:w-[400px] h-10 p-1 bg-muted rounded-lg mb-8">
+        <TabsTrigger value="branding" class="rounded-md text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">Identity</TabsTrigger>
+        <TabsTrigger value="location" class="rounded-md text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">Service</TabsTrigger>
+        <TabsTrigger value="qrcode" class="rounded-md text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">QR Hub</TabsTrigger>
       </TabsList>
 
       <!-- Branding Tab -->
-      <TabsContent value="branding" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <Card class="border-border shadow-xl rounded-[40px] p-8 space-y-6 bg-card overflow-hidden group">
-             <div class="text-center space-y-6">
-                <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Shop Identity (Logo)</Label>
+      <TabsContent value="branding" class="animate-in fade-in slide-in-from-bottom-1 duration-400">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card class="border border-border shadow-none rounded-lg p-6 bg-background">
+             <div class="text-center space-y-4">
+                <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block text-left px-1">Brand Visual (Logo)</Label>
                 <div 
-                  class="relative w-40 h-40 mx-auto rounded-[40px] bg-muted border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-all overflow-hidden"
+                  class="relative w-32 h-32 mx-auto rounded-lg bg-muted border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-all overflow-hidden"
                   @click="logoInput?.click()"
                 >
-                  <img v-if="form.logo_url" :src="form.logo_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div v-else class="text-muted-foreground/30">
-                    <LucideImage class="w-10 h-10 mx-auto mb-2" />
-                    <span class="text-[9px] font-black uppercase tracking-widest">Select Asset</span>
+                  <img v-if="form.logo_url" :src="form.logo_url" class="absolute inset-0 w-full h-full object-cover" />
+                  <div v-else class="text-muted-foreground/30 flex flex-col items-center">
+                    <LucideImage class="w-6 h-6 mb-2" />
+                    <span class="text-[9px] font-bold uppercase">Upload</span>
                   </div>
                 </div>
                 <input ref="logoInput" type="file" class="hidden" @change="uploadLogo" accept="image/*" />
-                <p class="text-[9px] text-muted-foreground italic">Square resolution recommended.</p>
+                <p class="text-[9px] text-muted-foreground font-medium">Standard square ratio is best.</p>
              </div>
           </Card>
 
-          <Card class="lg:col-span-2 border-border shadow-xl rounded-[40px] p-10 bg-card space-y-8">
-            <div class="space-y-4">
-              <Label for="shop_name" class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Business Narrative</Label>
-              <Input id="shop_name" v-model="form.name" placeholder="E.g. Zenith Gastro" class="rounded-2xl h-14 bg-muted border-transparent focus:bg-background focus:ring-primary text-sm font-bold" />
+          <Card class="lg:col-span-2 border border-border shadow-none rounded-lg p-8 bg-background space-y-6">
+            <div class="space-y-1.5">
+              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Public Shop Name</Label>
+              <Input v-model="form.name" placeholder="Vibrant Bistro" class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
             </div>
             
-            <div class="space-y-4">
-              <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">About the Shop</Label>
+            <div class="space-y-1.5">
+              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Brand Narrative (Description)</Label>
               <textarea 
-                id="shop_desc"
                 v-model="form.description" 
-                class="flex min-h-[160px] w-full rounded-[24px] border border-transparent bg-muted px-5 py-5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background transition-all italic leading-relaxed placeholder:text-muted-foreground/50"
-                placeholder="Share your kitchen's story and philosophy..."
+                class="flex min-h-[140px] w-full rounded-lg border border-input bg-background px-4 py-3 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary focus:bg-background transition-colors leading-relaxed placeholder:text-muted-foreground/40"
+                placeholder="Share your kitchen philosophy..."
               ></textarea>
             </div>
           </Card>
@@ -73,69 +72,69 @@
       </TabsContent>
 
       <!-- Location/Contact Tab -->
-      <TabsContent value="location" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <Card class="border-border shadow-xl rounded-[40px] p-10 bg-card space-y-10">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div class="space-y-4">
-              <Label for="shop_phone" class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Communication Line</Label>
-              <Input id="shop_phone" v-model="form.phone" placeholder="+12 345 6789" class="rounded-2xl h-14 bg-muted border-transparent focus:bg-background focus:ring-primary text-sm font-bold" />
+      <TabsContent value="location" class="animate-in fade-in slide-in-from-bottom-1 duration-400">
+        <Card class="border border-border shadow-none rounded-lg p-8 bg-background space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-1.5">
+              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Contact Line</Label>
+              <Input v-model="form.phone" placeholder="+12..." class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
             </div>
-            <div class="space-y-4">
-              <Label for="shop_hours" class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Service Hours</Label>
-              <Input id="shop_hours" v-model="form.business_hours" placeholder="Mon-Sun: 9 AM - 10 PM" class="rounded-2xl h-14 bg-muted border-transparent focus:bg-background focus:ring-primary text-sm font-bold" />
+            <div class="space-y-1.5">
+              <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Open Hours</Label>
+              <Input v-model="form.business_hours" placeholder="Sun-Fri: 11 AM - 10 PM" class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
             </div>
           </div>
 
-          <div class="space-y-4">
-            <Label for="shop_address" class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Physical Location</Label>
-            <Input id="shop_address" v-model="form.address" placeholder="123 Gastronomy St, Flavortown" class="rounded-2xl h-14 bg-muted border-transparent focus:bg-background focus:ring-primary text-sm font-bold" />
+          <div class="space-y-1.5">
+            <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Physical Address</Label>
+            <Input v-model="form.address" placeholder="123 Flavor Ave, Food Town" class="rounded-lg h-10 border-input bg-background text-xs font-bold" />
           </div>
         </Card>
       </TabsContent>
 
       <!-- QR Engine Tab -->
-      <TabsContent value="qrcode" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 text-foreground">
-          <Card class="border-border shadow-2xl rounded-[50px] p-12 bg-card flex flex-col items-center justify-center text-center space-y-8 min-h-[500px]">
-             <div class="space-y-2">
-                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Live Scannable Target</p>
-                <h4 class="text-2xl font-black uppercase italic text-foreground tracking-tighter">Table #{{ qrTable || 'General' }}</h4>
+      <TabsContent value="qrcode" class="animate-in fade-in slide-in-from-bottom-1 duration-400">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          <Card class="border border-border shadow-none rounded-lg p-10 bg-background flex flex-col items-center justify-center text-center space-y-6">
+             <div class="space-y-1">
+                <p class="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Scannable Point</p>
+                <h4 class="text-xl font-bold text-foreground">Table #{{ qrTable || 'Generic' }}</h4>
              </div>
              
-             <div class="relative p-8 bg-white rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-border group overflow-hidden">
-                <img :src="qrImageUrl" class="w-48 h-48 sm:w-64 sm:h-64 relative z-10" />
-                <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 backdrop-blur-sm">
-                   <Button variant="outline" class="rounded-2xl bg-background shadow-xl h-12 font-black uppercase text-[10px] tracking-widest" @click="printQR">
-                     <LucidePrinter class="w-4 h-4 mr-2" />
-                     Print Sticker
-                   </Button>
-                </div>
+             <div class="p-6 bg-white rounded-xl border border-border shadow-sm">
+                <img :src="qrImageUrl" class="w-40 h-40" />
              </div>
 
-             <div class="space-y-1">
-                <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Scan to access</p>
-                <p class="text-[11px] font-black text-foreground font-mono tracking-tighter truncate max-w-[200px]">{{ publicUrl }}</p>
+             <div class="flex flex-col items-center gap-4">
+                <div class="text-center">
+                   <p class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Direct Link</p>
+                   <p class="text-[10px] font-mono font-bold text-foreground opacity-60">{{ publicUrl }}</p>
+                </div>
+                <Button variant="outline" class="rounded-lg h-9 text-[10px] font-bold uppercase tracking-widest border-border" @click="printQR">
+                   <LucidePrinter class="w-3.5 h-3.5 mr-2" />
+                   Print Sticker
+                </Button>
              </div>
           </Card>
 
-          <div class="space-y-8 flex flex-col justify-center">
-             <div class="space-y-4 font-sans">
-                <h3 class="text-3xl font-black uppercase italic text-foreground leading-tight tracking-tighter">QR Production Engine</h3>
-                <p class="text-muted-foreground text-sm font-medium italic">Generate unique scannable points for every table in your facility. Our QR system automatically injects table context into the guest's menu experience.</p>
+          <div class="space-y-6 flex flex-col justify-center bg-muted/20 rounded-lg p-8 border border-border sm:border-dashed">
+             <div class="space-y-2">
+                <h3 class="text-2xl font-bold tracking-tight text-foreground">QR Generator</h3>
+                <p class="text-muted-foreground text-xs font-medium leading-relaxed">Instantly produce high-resolution codes for individual tables. The system automatically routes guests to the correct context.</p>
              </div>
              
-             <Separator class="bg-border opacity-50" />
+             <Separator class="bg-border" />
              
-             <div class="space-y-4">
-                <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 px-1">Configure Target Table</Label>
-                <div class="flex items-center gap-4">
+             <div class="space-y-2">
+                <Label class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Define Table Number</Label>
+                <div class="flex items-center gap-2">
                    <div class="relative flex-1">
-                     <LucideHash class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-                     <Input v-model="qrTable" placeholder="Table Number (Optional)" class="rounded-2xl h-14 bg-muted border-transparent pl-12 focus:bg-background focus:ring-primary text-sm font-bold" />
+                     <LucideHash class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                     <Input v-model="qrTable" placeholder="01, 02, etc." class="rounded-lg h-10 border-input bg-background pl-9 text-xs font-bold" />
                    </div>
-                   <Button variant="outline" @click="qrTable = ''" class="h-14 rounded-2xl px-6 font-black uppercase text-[9px] tracking-widest">Clear</Button>
+                   <Button variant="outline" @click="qrTable = ''" class="h-10 rounded-lg px-4 text-[10px] font-bold uppercase border-border">Reset</Button>
                 </div>
-                <p class="text-[10px] text-muted-foreground italic font-medium">Changing the table number regenerates the QR code instantly. No need to save.</p>
+                <p class="text-[9px] text-muted-foreground font-medium italic">Regenerates automatically on input. No save needed.</p>
              </div>
           </div>
         </div>
@@ -143,12 +142,12 @@
     </Tabs>
 
     <!-- Empty State -->
-    <div v-if="!currentShopId" class="py-40 text-center bg-muted/20 border-2 border-dashed border-border rounded-[60px]">
-       <div class="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-8">
-          <LucideStore class="w-10 h-10 text-muted-foreground/30" />
+    <div v-if="!currentShopId" class="py-32 text-center bg-muted/5 border border-dashed border-border rounded-lg">
+       <div class="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
+          <LucideStore class="w-5 h-5 text-muted-foreground/30" />
        </div>
-       <h3 class="text-2xl font-black text-muted-foreground/60 uppercase tracking-tight">Access Locked</h3>
-       <p class="text-muted-foreground/40 text-sm font-medium italic max-w-xs mx-auto">Please select a shop location in the sidebar to activate the settings engine.</p>
+       <h3 class="text-sm font-bold text-muted-foreground uppercase tracking-tight">Configuration Locked</h3>
+       <p class="text-muted-foreground text-xs font-medium max-w-[200px] mx-auto mt-1 leading-relaxed">Select a store from the sidebar to modify your branding.</p>
     </div>
   </div>
 </template>

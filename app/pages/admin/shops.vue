@@ -1,59 +1,59 @@
 <template>
-  <div class="space-y-8 animate-in fade-in duration-500">
+  <div class="space-y-8 animate-in fade-in duration-500 pb-12">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold tracking-tight text-foreground">Shops & Locations</h2>
-        <p class="text-muted-foreground text-sm">Manage your restaurant branches (Limit based on plan)</p>
+        <h2 class="text-3xl font-bold tracking-tight text-foreground">Locations</h2>
+        <p class="text-muted-foreground text-sm font-medium">Manage your restaurant branches and public URLs.</p>
       </div>
 
       <Dialog v-model:open="isModalOpen">
         <DialogTrigger as-child>
-          <Button @click="openModal()" class="rounded-full shadow-lg" :disabled="(shops?.length || 0) >= 3 && (user as any)?.account_type === 'free'">
+          <Button @click="openModal()" class="rounded-lg h-10 px-4" :disabled="(shops?.length || 0) >= 3 && (user as any)?.account_type === 'free'">
             <LucidePlus class="mr-2 h-4 w-4" />
-            Add Location
+            New Location
           </Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-md">
+        <DialogContent class="sm:max-w-md rounded-lg">
           <DialogHeader>
-            <DialogTitle>{{ form.id ? 'Edit Location' : 'New Location' }}</DialogTitle>
-            <DialogDescription>Input the official details for your restaurant branch.</DialogDescription>
+            <DialogTitle class="text-xl font-bold tracking-tight">{{ form.id ? 'Edit Location' : 'Create Location' }}</DialogTitle>
+            <DialogDescription class="text-xs font-medium">Input the official details for this branch.</DialogDescription>
           </DialogHeader>
 
-          <form @submit.prevent="saveShop" class="space-y-4 pt-4">
-            <div class="space-y-2">
-              <Label for="shop_name">Shop Name</Label>
-              <Input id="shop_name" v-model="form.name" @input="updateSlug" placeholder="Downtown Bistro" required />
+          <form @submit.prevent="saveShop" class="space-y-5 pt-3">
+            <div class="space-y-1.5">
+              <Label class="text-xs font-bold text-muted-foreground px-0.5">Shop Name</Label>
+              <Input v-model="form.name" @input="updateSlug" placeholder="Downtown Bistro" required class="h-10 rounded-lg bg-background" />
             </div>
 
-            <div class="space-y-2">
-              <Label for="shop_slug">Public Slug (URL Path)</Label>
+            <div class="space-y-1.5">
+              <Label class="text-xs font-bold text-muted-foreground px-0.5">Public Path /slug</Label>
               <div class="flex items-center gap-1">
-                <span class="text-[10px] font-black text-muted-foreground bg-muted px-2 py-2 rounded-l border border-r-0 border-border">/</span>
-                <Input id="shop_slug" v-model="form.slug" placeholder="downtown-bistro" class="rounded-l-none" required />
+                <span class="text-xs font-bold text-muted-foreground bg-muted px-3 h-10 flex items-center rounded-l-lg border border-r-0 border-border">/</span>
+                <Input v-model="form.slug" placeholder="downtown-bistro" class="rounded-l-none h-10 bg-background" required />
               </div>
             </div>
 
-            <div class="space-y-2">
-              <Label for="shop_addr">Physical Address</Label>
-              <Input id="shop_addr" v-model="form.address" placeholder="123 Main St, City" />
+            <div class="space-y-1.5">
+              <Label class="text-xs font-bold text-muted-foreground px-0.5">Address</Label>
+              <Input v-model="form.address" placeholder="123 Main St" class="h-10 rounded-lg bg-background" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <Label for="shop_phone">Contact Phone</Label>
-                <Input id="shop_phone" v-model="form.phone" placeholder="+123456789" />
+              <div class="space-y-1.5">
+                <Label class="text-xs font-bold text-muted-foreground px-0.5">Phone</Label>
+                <Input v-model="form.phone" placeholder="+123..." class="h-10 rounded-lg bg-background" />
               </div>
-              <div class="flex items-center space-x-2 pt-8">
-                <Checkbox id="active" v-model:checked="form.is_active" />
-                <Label for="active" class="text-sm font-medium leading-none">Live Status</Label>
+              <div class="flex items-center space-x-2 pt-6">
+                <Checkbox id="active" v-model:checked="form.is_active" class="rounded-md" />
+                <Label for="active" class="text-xs font-bold text-muted-foreground cursor-pointer">Live</Label>
               </div>
             </div>
 
-            <DialogFooter class="pt-4">
-              <Button type="button" variant="ghost" @click="isModalOpen = false">Cancel</Button>
-              <Button type="submit" :disabled="isSaving" class="px-8">
+            <DialogFooter class="pt-2">
+              <Button type="button" variant="ghost" @click="isModalOpen = false" class="rounded-lg h-10 px-6 text-xs font-bold">Cancel</Button>
+              <Button type="submit" :disabled="isSaving" class="rounded-lg h-10 px-8 text-xs font-bold">
                 <LucideLoader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
-                {{ form.id ? 'Save Changes' : 'Create Shop' }}
+                {{ form.id ? 'Save Changes' : 'Confirm' }}
               </Button>
             </DialogFooter>
           </form>
@@ -63,68 +63,65 @@
 
     <!-- Delete Confirmation Dialog -->
     <Dialog v-model:open="isDeleteModalOpen">
-      <DialogContent class="sm:max-w-md bg-card border-border rounded-[32px] p-8 text-foreground">
+      <DialogContent class="sm:max-w-md rounded-lg p-8">
         <DialogHeader class="space-y-3">
-          <div class="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive mb-2">
-            <LucideAlertTriangle class="w-6 h-6" />
+          <div class="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive mb-2">
+            <LucideAlertTriangle class="w-5 h-5" />
           </div>
-          <DialogTitle class="text-2xl font-black uppercase italic tracking-tighter">Liquidate Branch?</DialogTitle>
-          <DialogDescription class="text-sm font-medium italic text-muted-foreground leading-relaxed">
-            Are you sure you want to permanently remove <span class="text-foreground font-bold font-sans not-italic">"{{ shopToDelete?.name }}"</span>?
-            <br/><br/>
-            All associated catalog items, categories, and historical order data will be purged from the switch. This action is irreversible.
+          <DialogTitle class="text-xl font-bold tracking-tight">Remove Branch?</DialogTitle>
+          <DialogDescription class="text-xs font-medium text-muted-foreground leading-relaxed">
+            Are you sure you want to delete <span class="text-foreground font-bold">"{{ shopToDelete?.name }}"</span>? All associated menu items and data will be permanently removed.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter class="flex flex-row gap-3 pt-6 border-t border-border/50">
-          <Button variant="ghost" @click="isDeleteModalOpen = false" class="flex-1 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest">Keep It</Button>
-          <Button variant="destructive" @click="confirmDelete" class="flex-1 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20">
+        <DialogFooter class="flex flex-row gap-2 pt-6 border-t border-border">
+          <Button variant="ghost" @click="isDeleteModalOpen = false" class="flex-1 rounded-lg h-10 text-xs font-bold">Cancel</Button>
+          <Button variant="destructive" @click="confirmDelete" class="flex-1 rounded-lg h-10 text-xs font-bold">
             <LucideLoader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
-            Liquidate
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Card v-for="shop in shops" :key="shop.id" class="overflow-hidden border-border group hover:border-primary/50 transition-all duration-300">
+      <Card v-for="shop in shops" :key="shop.id" class="border border-border rounded-lg shadow-none overflow-hidden hover:bg-muted/5 transition-colors">
         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle class="text-lg font-bold tracking-tight text-foreground">
              {{ shop.name }}
           </CardTitle>
-          <Badge :variant="shop.is_active ? 'default' : 'secondary'" class="rounded-full px-3 uppercase text-[9px] font-black tracking-widest">
-            {{ shop.is_active ? 'Live' : 'Private' }}
+          <Badge :variant="shop.is_active ? 'default' : 'secondary'" class="rounded-md px-2 text-[8px] font-bold uppercase tracking-widest h-5">
+            {{ shop.is_active ? 'Live' : 'Hidden' }}
           </Badge>
         </CardHeader>
-        <CardContent class="space-y-6">
+        <CardContent class="space-y-5">
           <div class="space-y-2">
-             <div class="flex items-center gap-2 text-xs font-mono text-primary font-bold">
-               <LucideGlobe class="h-3.5 w-3.5" /> 
-               <span class="opacity-50">/</span>{{ shop.slug }}
+             <div class="flex items-center gap-2 text-[11px] font-mono font-bold text-foreground">
+               <LucideGlobe class="h-3.5 w-3.5 text-muted-foreground" /> 
+               <span class="opacity-40">/</span>{{ shop.slug }}
              </div>
-             <div class="flex items-start gap-2 text-sm text-muted-foreground italic">
-               <LucideMapPin class="h-4 w-4 shrink-0 mt-0.5" />
-               <span class="line-clamp-1">{{ shop.address || 'No address provided' }}</span>
+             <div class="flex items-start gap-2 text-[10px] text-muted-foreground font-medium">
+               <LucideMapPin class="h-3.5 w-3.5 shrink-0" />
+               <span class="line-clamp-1 leading-tight">{{ shop.address || 'Location secret' }}</span>
              </div>
           </div>
 
           <div class="flex items-center gap-2 pt-2">
-            <Button variant="secondary" class="w-full rounded-full h-9 text-xs font-bold" @click="openModal(shop)">
-               <LucidePencil class="h-3.5 w-3.5 mr-2" />
-               Edit Store
+            <Button variant="outline" class="flex-1 rounded-lg h-9 text-xs font-bold border-border" @click="openModal(shop)">
+               Edit
             </Button>
-            <Button variant="ghost" size="icon" class="rounded-full h-9 w-9 text-destructive/60 hover:text-destructive hover:bg-destructive/10" @click="deleteShop(shop)">
+            <Button variant="ghost" size="icon" class="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5" @click="deleteShop(shop)">
                <LucideTrash2 class="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
       </Card>
       
-      <div v-if="!pending && (shops?.length || 0) === 0" class="col-span-full py-32 text-center border-2 border-dashed border-border rounded-2xl bg-muted/30">
-         <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-            <LucideStore class="h-8 w-8 text-muted-foreground/50" />
+      <div v-if="!pending && (shops?.length || 0) === 0" class="col-span-full py-24 text-center border border-dashed border-border rounded-lg bg-muted/5">
+         <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
+            <LucideStore class="h-5 w-5 text-muted-foreground/30" />
          </div>
-         <h3 class="text-lg font-bold text-foreground">No shops found</h3>
-         <p class="text-muted-foreground text-sm max-w-xs mx-auto">Start by creating your first restaurant location to begin building your catalog.</p>
+         <h3 class="text-sm font-bold text-foreground uppercase tracking-tight">No locations found</h3>
+         <p class="text-muted-foreground text-xs font-medium max-w-[200px] mx-auto mt-1 leading-relaxed">Start by adding your first restaurant branch context.</p>
       </div>
     </div>
   </div>
