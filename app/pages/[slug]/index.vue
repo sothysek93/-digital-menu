@@ -34,20 +34,35 @@
       </div>
     </header>
 
+    <!-- Category Navigation Bar -->
+    <div v-if="!pending && Object.keys(groupedMenu).length > 1" class="sticky top-[73px] z-40 bg-background/95 backdrop-blur-sm border-b border-border/50 py-3 overflow-x-auto scrollbar-hide">
+      <div class="px-6 flex items-center gap-3 w-max mx-auto">
+        <button 
+          v-for="(_, catName) in groupedMenu" 
+          :key="catName"
+          @click="scrollToCategory(catName)"
+          class="px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border"
+          :class="activeCategory === catName ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'"
+        >
+          {{ catName }}
+        </button>
+      </div>
+    </div>
+
     <div class="flex-1 max-w-2xl mx-auto px-6 py-12 w-full space-y-16">
       <!-- Title Section -->
       <section class="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div class="space-y-2">
+        <div class="space-y-2 text-center md:text-left">
           <p class="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground leading-none">Welcome to</p>
           <h2 class="text-4xl md:text-5xl font-black tracking-tight text-foreground uppercase italic leading-[1.1] drop-shadow-sm">
             {{ data?.shop?.name || slug }}
           </h2>
         </div>
-        <div class="h-1.5 w-16 bg-primary rounded-full shadow-sm"></div>
-        <p class="text-muted-foreground text-sm font-medium pt-2 leading-relaxed max-w-md italic">
+        <div class="h-1.5 w-16 bg-primary rounded-full shadow-sm mx-auto md:ml-0"></div>
+        <p class="text-muted-foreground text-sm font-medium pt-2 leading-relaxed max-w-md italic text-center md:text-left">
           {{ data?.shop?.description || 'Discover a curated collection of culinary selections crafted for your delight.' }}
         </p>
-        <div v-if="data?.shop?.address" class="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-2">
+        <div v-if="data?.shop?.address" class="flex items-center justify-center md:justify-start gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-2">
            <LucideMapPin class="w-3.5 h-3.5" />
            {{ data.shop.address }}
         </div>
@@ -65,7 +80,7 @@
 
       <div v-else class="space-y-20">
          <template v-for="(groupItems, categoryName) in groupedMenu" :key="categoryName">
-           <section class="space-y-8 animate-in fade-in duration-1000">
+           <section :id="`cat-${categoryName}`" class="scroll-mt-32 space-y-8 animate-in fade-in duration-1000">
              <div class="flex items-center gap-4">
                <h3 class="text-[12px] font-black uppercase tracking-[0.4em] text-muted-foreground whitespace-nowrap">{{ categoryName }}</h3>
                <div class="h-[1px] w-full bg-border"></div>
@@ -107,12 +122,12 @@
     </div>
     
     <!-- Floating Cart Button -->
-    <transition enter-active-class="transition duration-300 ease-out" enter-from-class="translate-y-20 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-20 opacity-0">
-      <!-- UI Fix: Only show floating button if sheet is NOT open -->
-      <div v-if="cartTotalItems > 0 && !isSheetOpen" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-6">
+    <transition enter-active-class="transition duration-500 ease-out" enter-from-class="translate-y-20 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-300 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-20 opacity-0">
+      <!-- UI Fix: Using CSS to hide trigger instead of v-if to prevent unmounting the Sheet -->
+      <div v-if="cartTotalItems > 0" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-6 transition-all duration-300" :class="{ 'opacity-0 scale-95 pointer-events-none translate-y-4': isSheetOpen, 'opacity-100 scale-100': !isSheetOpen }">
         <Sheet v-model:open="isSheetOpen">
           <SheetTrigger as-child>
-            <Button class="w-full h-15 rounded-3xl bg-primary text-primary-foreground shadow-2xl flex items-center justify-between px-6 transform hover:scale-[1.02] active:scale-[0.98] transition-all group">
+            <Button class="w-full h-15 rounded-3xl bg-primary text-primary-foreground shadow-2xl flex items-center justify-between px-6 transform active:scale-[0.98] transition-all group">
               <div class="flex items-center gap-3">
                  <div class="relative">
                    <LucideShoppingCart class="w-6 h-6 group-hover:rotate-12 transition-transform" />
@@ -240,6 +255,15 @@ const table = ref(route.query.table as string || '');
 const isSheetOpen = ref(false);
 const orderSuccess = ref(false);
 const isSubmitting = ref(false);
+const activeCategory = ref('');
+
+const scrollToCategory = (catName: string) => {
+  activeCategory.value = catName;
+  const el = document.getElementById(`cat-${catName}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+  }
+};
 
 // Local Order Persistence
 const persistedOrderId = useState<string | null>('active-order-id', () => {
