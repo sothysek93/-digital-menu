@@ -4,24 +4,37 @@ import { H3Event } from 'h3';
 
 export const MenuItemSchema = z.object({
   id: z.string().uuid().optional(),
-  restaurant_id: z.string().uuid(),
+  shop_id: z.string().uuid(),
+  category_id: z.string().uuid(),
   name: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   price: z.number(),
-  image_url: z.string().optional(),
+  image_url: z.string().nullable().optional(),
   is_available: z.boolean().default(true).or(z.number().transform(v => !!v)),
+  order_index: z.number().default(0),
 });
 
 export type MenuItem = z.infer<typeof MenuItemSchema>;
 
 export class MenuService {
-  static async getByRestaurantSlug(event: H3Event, slug: string) {
+  static async getByShopSlug(event: H3Event, slug: string) {
     const rows = await query(event, `
-      SELECT m.* FROM menu_items m
-      JOIN restaurants r ON m.restaurant_id = r.id
-      WHERE LOWER(r.slug) = LOWER(?)
+      SELECT m.*, c.name as category_name FROM menu_items m
+      JOIN shops s ON m.shop_id = s.id
+      LEFT JOIN categories c ON m.category_id = c.id
+      WHERE LOWER(s.slug) = LOWER(?)
+      ORDER BY COALESCE(c.order_index, 0) DESC, m.order_index ASC
     `, [slug]);
     return rows;
+  }
+
+  static async getByShopId(event: H3Event, shopId: string) {
+    return await query(event, `
+      SELECT m.*, c.name as category_name FROM menu_items m
+      JOIN categories c ON m.category_id = c.id
+      WHERE m.shop_id = ?
+      ORDER BY c.order_index ASC, m.order_index ASC
+    `, [shopId]);
   }
 
   static async create(event: H3Event, item: Omit<MenuItem, 'id'>) {
@@ -32,16 +45,18 @@ export class MenuService {
     const isAvail = validated.is_available ? 1 : 0;
     
     await query(event, `
-      INSERT INTO menu_items (id, restaurant_id, name, description, price, image_url, is_available)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO menu_items (id, shop_id, category_id, name, description, price, image_url, is_available, order_index)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id,
-      validated.restaurant_id,
+      validated.shop_id,
+      validated.category_id,
       validated.name,
-      validated.description,
+      validated.description || null,
       validated.price,
-      validated.image_url,
-      isAvail
+      validated.image_url || null,
+      isAvail,
+      validated.order_index || 0
     ]);
     
     return { ...validated, id };
@@ -49,12 +64,15 @@ export class MenuService {
 
   static async update(event: H3Event, id: string, item: Partial<MenuItem>) {
     const validated = MenuItemSchema.partial().parse(item);
-    const fields = Object.keys(validated).filter(k => k !== 'id');
+    const fields = Object.keys(validated).filter(k => k !== 'id' && k !== 'shop_id');
     const values = fields.map(k => {
       const val = (validated as any)[k];
-      return typeof val === 'boolean' ? (val ? 1 : 0) : val;
+      if (typeof val === 'boolean') return val ? 1 : 0;
+      return val === undefined ? null : val;
     });
     
+    if (fields.length === 0) return { id };
+
     const setClause = fields.map(k => `${k} = ?`).join(', ');
     
     await query(event, `

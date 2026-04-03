@@ -17,9 +17,9 @@ export default defineEventHandler(async (event) => {
   // so the frontend middleware can decode it locally during refresh.
   const token = await AuthService.sign(event, { 
     id: user.id, 
-    name: user.name, // INCLUDED NAME
+    name: user.name,
     email: user.email,
-    slug: user.slug 
+    account_type: user.account_type
   });
   
   return { token, user };

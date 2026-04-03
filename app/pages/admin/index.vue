@@ -1,35 +1,19 @@
 <template>
   <div v-if="!user" class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
      <LucideLoader2 class="w-8 h-8 animate-spin text-slate-300" />
-     <span class="ml-4 text-slate-400 font-medium tracking-tight">Synchronizing Restaurant Identity...</span>
+     <span class="ml-4 text-slate-400 font-medium tracking-tight text-xs uppercase font-black">Synchronizing Identity...</span>
   </div>
-  <div v-else class="min-h-screen bg-slate-50 flex flex-col">
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200">
-      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <LucideLayoutDashboard class="w-5 h-5 text-slate-900" />
-          <h1 class="text-xl font-bold text-slate-900">Menu Manager</h1>
-        </div>
-        <div class="flex items-center gap-4">
-          <span class="text-sm font-medium text-slate-500">{{ user?.name }}</span>
-          <Button variant="ghost" size="sm" @click="logout" class="text-slate-500 hover:text-slate-950">
-            Logout
-          </Button>
-        </div>
+  <div v-else class="space-y-8 pb-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight text-slate-900 line-clamp-1">Menu Catalog</h2>
+        <p class="text-slate-500 text-sm">Manage the dishes for your active location.</p>
       </div>
-    </header>
 
-    <main class="flex-1 max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-3xl font-bold tracking-tight text-slate-900">Catalogue</h2>
-          <p class="text-slate-500 text-sm">Manage your restaurant catalog and availability</p>
-        </div>
-
+      <div class="flex items-center gap-2">
         <Dialog v-model:open="isModalOpen">
           <DialogTrigger as-child>
-            <Button @click="openModal()" class="rounded-full shadow-sm">
+            <Button @click="openModal()" class="rounded-full shadow-sm" :disabled="!currentShopId || categories?.length === 0">
               <LucidePlus class="mr-2 h-4 w-4" />
               Add Item
             </Button>
@@ -37,13 +21,31 @@
           <DialogContent class="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{{ form.id ? 'Edit Item' : 'New Item' }}</DialogTitle>
-              <DialogDescription>Enter the details for your menu dish.</DialogDescription>
+              <DialogDescription>Details for your menu entry.</DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="saveItem" class="space-y-4 pt-4">
+            <form @submit.prevent="saveItem" class="space-y-4 pt-2">
               <div class="space-y-2">
                 <Label for="dish_name">Dish Name</Label>
-                <Input id="dish_name" v-model="form.name" placeholder="Classic Burger" required />
+                <Input id="dish_name" v-model="form.name" placeholder="Classic Wagyu Burger" required />
+              </div>
+
+              <!-- Category Selection -->
+              <div class="space-y-2">
+                <Label>Category</Label>
+                <Select v-model="form.category_id" required>
+                  <SelectTrigger class="w-full bg-white border-slate-200">
+                    <SelectValue placeholder="Select a Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="cat in categories" :key="cat.id" :value="cat.id">
+                      {{ cat.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p v-if="categories?.length === 0" class="text-[10px] text-red-500 font-bold uppercase tracking-widest mt-1">
+                   No categories found. Create one first!
+                </p>
               </div>
 
               <div class="space-y-2">
@@ -52,7 +54,7 @@
                   id="dish_desc"
                   v-model="form.description" 
                   class="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950"
-                  placeholder="Describe your dish..."
+                  placeholder="Describe the flavors..."
                 ></textarea>
               </div>
 
@@ -70,13 +72,13 @@
               <div class="space-y-2 pt-2">
                 <Label>Image</Label>
                 <div 
-                  class="relative aspect-video rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors overflow-hidden"
-                  @click="$refs.fileInput.click()"
-                >
+                   class="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors overflow-hidden group"
+                   @click="fileInput?.click()"
+                 >
                   <img v-if="form.image_url" :src="form.image_url" class="absolute inset-0 w-full h-full object-cover" />
                   <div v-else class="text-center">
-                    <LucideImage class="mx-auto h-8 w-8 text-slate-300" />
-                    <span class="text-xs text-slate-400 mt-2 block font-medium">Upload Photo</span>
+                    <LucideImage class="mx-auto h-8 w-8 text-slate-300 group-hover:scale-110 transition-transform" />
+                    <span class="text-xs text-slate-400 mt-2 block font-black uppercase tracking-widest leading-none">Upload Cover</span>
                   </div>
                 </div>
                 <input ref="fileInput" type="file" class="hidden" @change="uploadImage" />
@@ -93,141 +95,184 @@
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
-      <!-- Inventory Table -->
-      <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
-        <Table>
-          <TableHeader class="bg-slate-50">
-            <TableRow>
-              <TableHead class="w-[80px]">Photo</TableHead>
-              <TableHead>Item Details</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead class="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="item in (menuItems || [])" :key="item.id">
-              <TableCell>
-                <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
-                  <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover" />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div class="font-semibold text-slate-900">{{ item.name }}</div>
-                <div class="text-xs text-slate-500 line-clamp-1 truncate max-w-[200px]">{{ item.description }}</div>
-              </TableCell>
-              <TableCell class="font-medium font-mono">${{ item.price.toFixed(2) }}</TableCell>
-              <TableCell>
-                <Badge :variant="item.is_available ? 'outline' : 'secondary'">
-                  {{ item.is_available ? 'Active' : 'Offline' }}
-                </Badge>
-              </TableCell>
-              <TableCell class="text-right">
-                <div class="flex justify-end gap-1">
-                  <Button variant="ghost" size="icon" @click="openModal(item)">
-                    <LucidePencil class="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" class="text-red-500 hover:text-red-600 hover:bg-red-50" @click="deleteItem(item.id)">
-                    <LucideTrash2 class="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-            <TableRow v-if="!pending && (!menuItems || menuItems.length === 0)">
-              <TableCell colspan="5" class="py-12 text-center text-slate-400 font-medium">
-                No items found. Add your first item above!
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Card>
+    <!-- Inventory Table -->
+    <Card class="border-slate-200 shadow-sm overflow-hidden py-1 px-1">
+      <Table>
+        <TableHeader class="bg-slate-50">
+          <TableRow>
+            <TableHead class="w-[80px]">Photo</TableHead>
+            <TableHead>Item Details</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead class="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="item in (menuItems || [])" :key="item.id">
+            <TableCell>
+              <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+                <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover" />
+              </div>
+            </TableCell>
+            <TableCell>
+              <div class="font-bold text-slate-900 leading-tight">{{ item.name }}</div>
+              <div class="text-[10px] text-slate-400 line-clamp-1 italic max-w-[150px]">{{ item.description }}</div>
+            </TableCell>
+            <TableCell>
+              <Badge variant="outline" class="bg-white text-[10px] uppercase font-black tracking-widest whitespace-nowrap">
+                {{ item.category_name || 'Uncategorized' }}
+              </Badge>
+            </TableCell>
+            <TableCell class="font-mono text-sm">${{ item.price.toFixed(2) }}</TableCell>
+            <TableCell>
+              <Badge :variant="item.is_available ? 'secondary' : 'outline'" class="rounded-lg h-5 px-1.5 text-[9px] font-black uppercase tracking-widest">
+                {{ item.is_available ? 'Active' : 'Offline' }}
+              </Badge>
+            </TableCell>
+            <TableCell class="text-right">
+              <div class="flex justify-end gap-1">
+                <Button variant="ghost" size="icon" @click="openModal(item)" class="h-8 w-8 rounded-lg">
+                  <LucidePencil class="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" class="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50" @click="deleteItem(item.id)">
+                  <LucideTrash2 class="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+          <TableRow v-if="!pending && (!menuItems || menuItems.length === 0)">
+            <TableCell colspan="6" class="py-20 text-center text-slate-400 font-medium italic">
+              {{ !currentShopId ? 'Please select a shop location' : 'No items found. Ready your first dish!' }}
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </Card>
       
-      <!-- Public URL Info -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-             <LucideGlobe class="w-5 h-5 text-slate-400" />
-          </div>
-          <div>
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Public Menu Link</div>
-            <div class="text-sm font-medium text-slate-900 underline-offset-4 decoration-slate-200 underline decoration-2">https://digital-menu-95n.pages.dev/{{ user?.slug }}</div>
+    <!-- Public URL Info -->
+    <div v-if="currentShop" class="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+      <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      
+      <div class="flex items-center gap-4 relative z-10">
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-slate-800 shadow-xl">
+           <LucideGlobe class="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1.5">Live Menu Endpoint</div>
+          <div class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            /{{ currentShop?.slug }}
+            <Badge variant="outline" class="text-[9px] h-4 uppercase font-black">Syncing Live</Badge>
           </div>
         </div>
-        <Button variant="outline" class="rounded-full shadow-sm" as-child>
-           <NuxtLink :to="`/${user?.slug}`" target="_blank" v-if="user?.slug">
-             View Live Menu
-             <LucideExternalLink class="ml-2 h-4 w-4" />
+      </div>
+      
+      <div class="flex items-center gap-3 relative z-10 w-full md:w-auto">
+        <Button variant="outline" class="flex-1 md:flex-none rounded-xl shadow-sm h-11 px-6 text-xs font-bold uppercase tracking-widest" @click="copyLink">
+           Copy Link
+        </Button>
+        <Button as-child class="flex-1 md:flex-none rounded-xl shadow-lg h-11 px-6 text-xs font-bold uppercase tracking-widest bg-slate-900 hover:translate-y-[-2px] transition-transform">
+           <NuxtLink :to="`/${currentShop?.slug}`" target="_blank">
+             Open Public Menu
+             <LucideExternalLink class="ml-2 h-3.5 w-3.5" />
            </NuxtLink>
         </Button>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { 
-  LucideLayoutDashboard, LucidePlus, LucideImage, LucideLoader2, 
-  LucidePencil, LucideTrash2, LucideGlobe, LucideExternalLink 
+  Plus as LucidePlus, Image as LucideImage, Loader2 as LucideLoader2, 
+  Pencil as LucidePencil, Trash2 as LucideTrash2, Globe as LucideGlobe, ExternalLink as LucideExternalLink 
 } from 'lucide-vue-next';
-import { Card, CardContent } from '../../components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Checkbox } from '../../components/ui/checkbox';
+import { Card } from '~/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '~/components/ui/table';
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { Checkbox } from '~/components/ui/checkbox';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogDescription, DialogFooter, DialogTrigger 
-} from '../../components/ui/dialog';
+} from '~/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui';
 
-// Use proper Nuxt middleware (MUST BE EAGER)
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ layout: 'admin' });
 
-const router = useRouter();
-const user = useState('user') as any;
+interface Shop { id: string; name: string; slug: string; }
+interface Category { id: string; name: string; }
+interface MenuItem { 
+  id: string; 
+  name: string; 
+  category_id: string; 
+  category_name?: string;
+  description: string; 
+  price: number; 
+  image_url: string; 
+  is_available: boolean; 
+}
+
+const user = useState<any>('user');
 const token = useCookie('token');
+const currentShopId = useState<string | null>('currentShopId');
 const isSaving = ref(false);
 const isModalOpen = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
-  id: null,
+  id: null as string | null,
   name: '',
+  category_id: '',
   description: '',
   price: 0,
   image_url: '',
   is_available: true
 });
 
-// useFetch for high-performance, fresh data on every Cloudflare refresh.
-// Using a reactive 'url' ensures it re-triggers if the identity is restored.
-const menuUrl = computed(() => user.value?.slug ? `/api/public/menu?slug=${user.value.slug}` : null);
-
-const { data: menuItems, pending, refresh: refreshItems } = await useFetch(menuUrl, {
-  // Unique cache key with timestamp to force a fresh call on reload
-  key: `admin-items-${user.value?.id}`,
-  transform: (data: any) => data || []
+// Fetch shops to get slug for public URL
+const { data: shops } = await useFetch<Shop[]>('/api/admin/shops', {
+  headers: { Authorization: `Bearer ${token.value}` }
 });
+const currentShop = computed(() => shops.value?.find(s => s.id === currentShopId.value));
+
+// Categories for selector
+const { data: categories } = await useFetch<Category[]>(() => 
+  currentShopId.value ? `/api/admin/categories?shopId=${currentShopId.value}` : '/api/admin/categories?shopId=none',
+  { headers: { Authorization: `Bearer ${token.value}` } }
+);
+
+// Items for current shop
+const { data: menuItems, pending, refresh: refreshItems } = await useFetch<MenuItem[]>(() => 
+  currentShopId.value ? `/api/admin/menu/list?shopId=${currentShopId.value}` : '/api/admin/menu/list?shopId=none',
+  { headers: { Authorization: `Bearer ${token.value}` } }
+);
 
 const openModal = (item: any = null) => {
   if (item) {
     Object.assign(form, item);
     form.is_available = !!item.is_available;
   } else {
-    Object.assign(form, { id: null, name: '', description: '', price: 0, image_url: '', is_available: true });
+    Object.assign(form, { 
+      id: null, name: '', category_id: categories.value?.[0]?.id || '', 
+      description: '', price: 0, image_url: '', is_available: true 
+    });
   }
   isModalOpen.value = true;
 };
 
 const uploadImage = async (event: any) => {
   const file = event.target.files[0];
-  if (!file || !user.value) return;
+  if (!file || !currentShopId.value) return;
 
   try {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('restaurantId', user.value.id);
+    formData.append('restaurantId', currentShopId.value);
 
     const res = await $fetch('/api/upload', {
       method: 'POST',
@@ -242,7 +287,7 @@ const uploadImage = async (event: any) => {
 };
 
 const saveItem = async () => {
-  if (!user.value) return;
+  if (!currentShopId.value) return;
   isSaving.value = true;
   try {
     const method = form.id ? 'PUT' : 'POST';
@@ -250,7 +295,7 @@ const saveItem = async () => {
     
     await $fetch(url, {
       method,
-      body: { ...form, restaurant_id: user.value.id },
+      body: { ...form, shop_id: currentShopId.value },
       headers: { Authorization: `Bearer ${token.value}` }
     });
     
@@ -276,9 +321,12 @@ const deleteItem = async (id: string) => {
   }
 };
 
-const logout = () => {
-  token.value = null;
-  user.value = null;
-  router.push('/admin/login');
+const copyLink = () => {
+  if (!currentShop.value) return;
+  const url = `${window.location.origin}/${currentShop.value.slug}`;
+  navigator.clipboard.writeText(url);
+  alert('Link copied!');
 };
+
+watch(currentShopId, () => refreshItems());
 </script>

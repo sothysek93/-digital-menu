@@ -29,7 +29,7 @@ export class AuthService {
   }
 
   static async login(event: H3Event, email: string, pass: string) {
-    const rows: any[] = await query(event, 'SELECT * FROM restaurants WHERE email = ?', [email]);
+    const rows: any[] = await query(event, 'SELECT * FROM users WHERE email = ?', [email]);
     if (rows.length === 0) return null;
     
     const user = rows[0];
@@ -39,8 +39,8 @@ export class AuthService {
     return {
       id: user.id,
       name: user.name,
-      slug: user.slug,
-      email: user.email
+      email: user.email,
+      account_type: user.account_type
     };
   }
 
