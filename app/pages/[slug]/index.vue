@@ -1,272 +1,224 @@
 <template>
-  <div class="min-h-screen bg-background flex flex-col font-sans selection:bg-primary selection:text-primary-foreground">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between transition-all">
+  <div class="min-h-screen bg-background flex flex-col font-sans selection:bg-primary selection:text-primary-foreground text-foreground">
+    <!-- Clean Minimalist Header -->
+    <header class="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div v-if="data?.shop?.logo_url" class="w-10 h-10 rounded-xl overflow-hidden shadow-md">
+        <div v-if="data?.shop?.logo_url" class="w-8 h-8 rounded-lg overflow-hidden border border-border">
            <img :src="data.shop.logo_url" class="w-full h-full object-cover" />
         </div>
-        <div v-else class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-           <LucideChefHat class="w-5 h-5 text-primary-foreground" />
+        <div v-else class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+           <LucideChefHat class="w-4 h-4 text-primary" />
         </div>
         <div>
-          <h1 class="text-[12px] font-black tracking-[0.2em] text-foreground uppercase">
-             {{ data?.shop?.name || 'Menu Experience' }}
+          <h1 class="text-[11px] font-bold tracking-tight text-foreground uppercase">
+             {{ data?.shop?.name || 'Digital Menu' }}
           </h1>
-          <div class="flex items-center gap-2 mt-0.5">
-             <div v-if="table" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted border border-border text-[8px] font-black uppercase tracking-widest text-muted-foreground">
-                <div class="w-1 h-1 rounded-full bg-primary"></div>
-                Table {{ table }}
-             </div>
-             <p v-if="data?.shop?.business_hours" class="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">
-               {{ data.shop.business_hours }}
-             </p>
+          <div v-if="table" class="flex items-center gap-1.5 mt-0.5 text-[9px] font-medium text-muted-foreground uppercase">
+             <span class="w-1 h-1 rounded-full bg-emerald-500"></span>
+             Table {{ table }}
           </div>
         </div>
       </div>
       
-      <!-- Track My Order Chip -->
-      <div v-if="persistedOrderId" class="animate-in fade-in slide-in-from-right-4 duration-500">
-         <Button variant="outline" size="sm" class="h-8 rounded-full border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest px-3 hover:bg-primary/10" @click="viewRecentOrder">
-            <LucideLoader2 class="w-3 h-3 mr-1.5 animate-spin" />
-            Track Order
+      <!-- Minimalist Tracking Button -->
+      <div v-if="persistedOrderId">
+         <Button variant="outline" size="sm" class="h-8 rounded-lg text-[10px] font-bold uppercase px-3 gap-2" @click="viewRecentOrder">
+            <LucideLoader2 v-if="isLoadingActiveOrder" class="w-3 h-3 animate-spin text-primary" />
+            <LucideEye v-else class="w-3 h-3" />
+            Track Status
          </Button>
       </div>
     </header>
 
-    <!-- Category Navigation Bar -->
-    <div v-if="!pending && Object.keys(groupedMenu).length > 1" class="sticky top-[73px] z-40 bg-background/95 backdrop-blur-sm border-b border-border/50 py-3 overflow-x-auto scrollbar-hide">
-      <div class="px-6 flex items-center gap-3 w-max mx-auto">
+    <!-- Clean Category Navigation -->
+    <div v-if="!pending && Object.keys(groupedMenu).length > 1" class="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border py-2 overflow-x-auto scrollbar-hide">
+      <div class="px-4 flex items-center gap-2 w-max mx-auto">
         <button 
           v-for="(_, catName) in groupedMenu" 
           :key="catName"
           @click="scrollToCategory(catName)"
-          class="px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border"
-          :class="activeCategory === catName ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'"
+          class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all whitespace-nowrap border"
+          :class="activeCategory === catName ? 'bg-foreground text-background border-foreground shadow-sm' : 'bg-background text-muted-foreground border-border hover:border-foreground/50'"
         >
           {{ catName }}
         </button>
       </div>
     </div>
 
-    <div class="flex-1 max-w-2xl mx-auto px-6 py-12 w-full space-y-16">
-      <!-- Title Section -->
-      <section class="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div class="space-y-2 text-center md:text-left">
-          <p class="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground leading-none">Welcome to</p>
-          <h2 class="text-4xl md:text-5xl font-black tracking-tight text-foreground uppercase italic leading-[1.1] drop-shadow-sm">
-            {{ data?.shop?.name || slug }}
-          </h2>
+    <div class="flex-1 max-w-xl mx-auto px-4 py-8 w-full space-y-12">
+      <!-- Minimalist Shop Info -->
+      <section class="space-y-4 animate-in fade-in duration-500">
+        <div class="space-y-1 text-center">
+          <h2 class="text-3xl font-bold tracking-tight text-foreground">{{ data?.shop?.name || slug }}</h2>
+          <p class="text-muted-foreground text-sm font-medium leading-relaxed max-w-sm mx-auto">
+            {{ data?.shop?.description || 'Curated culinary selections.' }}
+          </p>
         </div>
-        <div class="h-1.5 w-16 bg-primary rounded-full shadow-sm mx-auto md:ml-0"></div>
-        <p class="text-muted-foreground text-sm font-medium pt-2 leading-relaxed max-w-md italic text-center md:text-left">
-          {{ data?.shop?.description || 'Discover a curated collection of culinary selections crafted for your delight.' }}
-        </p>
-        <div v-if="data?.shop?.address" class="flex items-center justify-center md:justify-start gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-2">
-           <LucideMapPin class="w-3.5 h-3.5" />
+        <div v-if="data?.shop?.address" class="flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wide">
+           <LucideMapPin class="w-3 h-3" />
            {{ data.shop.address }}
         </div>
       </section>
 
-      <!-- Content Grid -->
-      <div v-if="pending" class="space-y-12">
+      <!-- Menu Feed -->
+      <div v-if="pending" class="space-y-10">
         <div v-for="i in 3" :key="i" class="space-y-4">
-           <div class="h-4 w-32 bg-muted rounded animate-pulse"></div>
-           <div class="grid grid-cols-1 gap-6">
-              <div v-for="j in 2" :key="j" class="h-32 w-full bg-muted rounded-3xl animate-pulse"></div>
+           <div class="h-3 w-24 bg-muted rounded-full animate-pulse"></div>
+           <div class="space-y-4">
+              <div v-for="j in 2" :key="j" class="h-24 w-full bg-muted rounded-xl animate-pulse"></div>
            </div>
         </div>
       </div>
 
-      <div v-else class="space-y-20">
+      <div v-else class="space-y-12">
          <template v-for="(groupItems, categoryName) in groupedMenu" :key="categoryName">
-           <section :id="`cat-${categoryName}`" class="scroll-mt-32 space-y-8 animate-in fade-in duration-1000">
-             <div class="flex items-center gap-4">
-               <h3 class="text-[12px] font-black uppercase tracking-[0.4em] text-muted-foreground whitespace-nowrap">{{ categoryName }}</h3>
-               <div class="h-[1px] w-full bg-border"></div>
-             </div>
+           <section :id="`cat-${categoryName}`" class="scroll-mt-28 space-y-6 animate-in fade-in duration-700">
+             <h3 class="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.2em] px-1">{{ categoryName }}</h3>
              
-             <div class="grid grid-cols-1 gap-12">
-               <div v-for="item in groupItems" :key="item.id" class="flex items-start gap-6 group hover:translate-x-1 transition-transform cursor-pointer" @click="addToCart(item)">
-                 <div class="relative w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-3xl bg-muted overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                   <img v-if="item.image_url" :src="item.image_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                   <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
-                     <LucideChefHat class="w-8 h-8" />
-                   </div>
-                   <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
-                 </div>
-                 
-                 <div class="flex-1 space-y-1.5 flex flex-col justify-center">
-                    <div class="flex items-start justify-between">
-                       <h4 class="font-black text-lg md:text-xl text-foreground leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">{{ item.name }}</h4>
-                       <span class="font-mono font-bold text-foreground text-sm md:text-base">${{ item.price.toFixed(2) }}</span>
+             <div class="space-y-1">
+                <Card v-for="item in groupItems" :key="item.id" 
+                  class="flex items-center gap-4 p-3 border-none hover:bg-muted/50 transition-colors cursor-pointer group shadow-none" 
+                  @click="addToCart(item)"
+                >
+                  <div class="relative w-16 h-16 shrink-0 rounded-lg bg-muted overflow-hidden border border-border">
+                    <img v-if="item.image_url" :src="item.image_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
+                      <LucideChefHat class="w-5 h-5" />
                     </div>
-                    <p class="text-[11px] text-muted-foreground font-medium italic line-clamp-2 leading-relaxed">{{ item.description }}</p>
-                    <div class="pt-2 flex items-center gap-2">
-                       <Button size="xs" variant="secondary" class="h-7 px-2.5 rounded-full text-[9px] font-black uppercase tracking-widest">
-                         <LucidePlus class="w-3 h-3 mr-1" />
-                         Add to Basket
-                       </Button>
-                    </div>
-                 </div>
-               </div>
+                  </div>
+                  
+                  <div class="flex-1 min-w-0 pr-1">
+                     <div class="flex items-start justify-between gap-2">
+                        <h4 class="font-bold text-sm text-foreground truncate uppercase tracking-tight">{{ item.name }}</h4>
+                        <span class="font-mono font-bold text-sm text-foreground shrink-0">${{ item.price.toFixed(2) }}</span>
+                     </div>
+                     <p class="text-[11px] text-muted-foreground font-medium line-clamp-1 mt-0.5 leading-tight">{{ item.description }}</p>
+                     <div class="mt-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="text-[8px] font-black uppercase bg-primary text-primary-foreground px-2 py-0.5 rounded">Quick Add +</span>
+                     </div>
+                  </div>
+                </Card>
              </div>
            </section>
          </template>
       </div>
 
       <!-- Empty State -->
-      <div v-if="!pending && (!data?.items || data.items.length === 0)" class="py-32 text-center text-muted-foreground font-medium italic">
-        Our menu is evolving. Please visit later!
+      <div v-if="!pending && (!data?.items || data.items.length === 0)" class="py-24 text-center text-muted-foreground text-xs font-medium">
+        No active items in the menu.
       </div>
     </div>
     
-    <!-- Floating Cart Button -->
-    <transition enter-active-class="transition duration-500 ease-out" enter-from-class="translate-y-20 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-300 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-20 opacity-0">
-      <!-- UI Fix: Using CSS to hide trigger instead of v-if to prevent unmounting the Sheet -->
-      <div v-if="cartTotalItems > 0" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-6 transition-all duration-300" :class="{ 'opacity-0 scale-95 pointer-events-none translate-y-4': isSheetOpen, 'opacity-100 scale-100': !isSheetOpen }">
-        <Sheet v-model:open="isSheetOpen">
-          <SheetTrigger as-child>
-            <Button class="w-full h-15 rounded-3xl bg-primary text-primary-foreground shadow-2xl flex items-center justify-between px-6 transform active:scale-[0.98] transition-all group">
-              <div class="flex items-center gap-3">
-                 <div class="relative">
-                   <LucideShoppingCart class="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                   <span class="absolute -top-2 -right-2 bg-background text-foreground text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-primary">
-                     {{ cartTotalItems }}
-                   </span>
+    <!-- Minimalist Floating Cart -->
+    <div v-if="cartTotalItems > 0 && !isSheetOpen && !orderSuccess" 
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-max animate-in fade-in slide-in-from-bottom-4 duration-300"
+    >
+        <Button class="h-12 rounded-full bg-foreground text-background shadow-xl flex items-center gap-4 px-6 hover:scale-105 transition-transform active:scale-95" @click="isSheetOpen = true">
+            <div class="flex items-center gap-2 pr-4 border-r border-background/20">
+               <LucideShoppingCart class="w-4 h-4" />
+               <span class="text-xs font-black">{{ cartTotalItems }}</span>
+            </div>
+            <span class="text-xs font-black uppercase tracking-widest leading-none">Review Basket • ${{ cartTotalValue.toFixed(2) }}</span>
+        </Button>
+    </div>
+
+    <!-- Standard ShadCN Sheet for Checkout -->
+    <Sheet v-model:open="isSheetOpen">
+      <SheetContent side="bottom" class="h-[80vh] rounded-t-3xl px-6 pt-8 pb-10 flex flex-col border-t-0 shadow-2xl z-[130]">
+        <SheetHeader class="space-y-0.5 border-b border-border pb-4 mb-4">
+          <SheetTitle class="text-2xl font-bold tracking-tight uppercase">Your Order</SheetTitle>
+          <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Select items for table {{ table || '?' }}</p>
+        </SheetHeader>
+        
+        <div class="flex-1 overflow-y-auto space-y-4 px-1 scrollbar-hide">
+           <div v-for="item in cart" :key="item.id" class="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0">
+             <div class="flex-1 min-w-0">
+               <h5 class="font-bold text-xs text-foreground uppercase truncate">{{ item.name }}</h5>
+               <p class="text-[10px] font-medium text-muted-foreground shrink-0">${{ item.price.toFixed(2) }}</p>
+             </div>
+             <div class="flex items-center gap-3">
+                <div class="flex items-center bg-muted rounded-lg px-1.5 py-1 ring-1 ring-border">
+                   <button @click="removeFromCart(item.id)" class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground">
+                      <LucideMinus class="w-3 h-3" />
+                   </button>
+                   <span class="w-6 text-center text-[10px] font-bold">{{ item.quantity }}</span>
+                   <button @click="addToCart(item)" class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground">
+                      <LucidePlus class="w-3 h-3" />
+                   </button>
+                </div>
+                <span class="font-mono font-bold text-xs min-w-[50px] text-right">${{ (item.price * item.quantity).toFixed(2) }}</span>
+             </div>
+           </div>
+        </div>
+
+        <div class="pt-6 border-t border-border space-y-6">
+           <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                 <div class="space-y-1">
+                    <Label class="text-[9px] font-bold uppercase text-muted-foreground px-1">Full Name</Label>
+                    <Input v-model="orderForm.customer_name" placeholder="Optional" class="h-10 text-xs rounded-lg" />
                  </div>
-                 <div class="flex flex-col items-start leading-none">
-                    <span class="text-[11px] font-black uppercase tracking-widest">Review Basket</span>
-                    <span class="text-[9px] text-primary-foreground/60 font-bold uppercase tracking-widest">{{ cartTotalItems }} items selected</span>
+                 <div class="space-y-1">
+                    <Label class="text-[9px] font-bold uppercase text-muted-foreground px-1">Table #</Label>
+                    <Input v-model="orderForm.table_number" placeholder="Required" class="h-10 text-xs rounded-lg" />
                  </div>
               </div>
-              <span class="font-mono font-black text-base italic">${{ cartTotalValue.toFixed(2) }}</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" class="h-[85vh] rounded-t-[50px] px-8 pt-10 pb-12 flex flex-col border-t-0 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)] z-[130]">
-            <SheetHeader class="space-y-1 mb-8">
-              <p class="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Order Overview</p>
-              <SheetTitle class="text-4xl font-black uppercase italic text-foreground leading-none tracking-tighter">Your Selection</SheetTitle>
-            </SheetHeader>
-            
-            <div class="flex-1 overflow-y-auto space-y-6 px-1 scrollbar-hide">
-               <div v-for="item in cart" :key="item.id" class="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 border-dashed">
-                 <div class="flex-1">
-                   <h5 class="font-black text-sm text-foreground uppercase tracking-tight">{{ item.name }}</h5>
-                   <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">${{ item.price.toFixed(2) }}</p>
-                 </div>
-                 <div class="flex items-center gap-4">
-                    <div class="flex items-center bg-muted rounded-2xl px-2 py-1.5 ring-1 ring-border/50">
-                       <button @click="removeFromCart(item.id)" class="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                          <LucideMinus class="w-3.5 h-3.5" />
-                       </button>
-                       <span class="w-8 text-center text-xs font-black font-mono">{{ item.quantity }}</span>
-                       <button @click="addToCart(item)" class="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                          <LucidePlus class="w-3.5 h-3.5" />
-                       </button>
-                    </div>
-                    <span class="font-mono font-black text-xs min-w-[60px] text-right">${{ (item.price * item.quantity).toFixed(2) }}</span>
-                 </div>
-               </div>
-            </div>
+           </div>
 
-            <div class="pt-8 border-t border-border space-y-8">
-               <div class="space-y-6">
-                  <div class="space-y-3">
-                    <Label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Dining Details</Label>
-                    <div class="grid grid-cols-2 gap-4">
-                       <Input v-model="orderForm.customer_name" placeholder="Name" class="rounded-[20px] h-13 text-xs font-bold bg-muted border-transparent transition-all focus:bg-background focus:ring-primary" />
-                       <Input v-model="orderForm.table_number" placeholder="Table #" class="rounded-[20px] h-13 text-xs font-bold bg-muted border-transparent transition-all focus:bg-background focus:ring-primary" />
-                    </div>
-                  </div>
-                  <div class="flex items-end justify-between py-2 border-b border-border border-dashed pb-6">
-                    <div class="space-y-1">
-                      <span class="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground block leading-none">Order Total</span>
-                      <span class="text-[9px] text-muted-foreground/50 font-bold uppercase tracking-widest">Pricing shown with no hidden fees</span>
-                    </div>
-                    <span class="text-4xl font-black italic text-foreground leading-none tracking-tighter">${{ cartTotalValue.toFixed(2) }}</span>
-                  </div>
-               </div>
+           <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-muted-foreground">Order Total</span>
+              <span class="text-2xl font-bold tracking-tight">${{ cartTotalValue.toFixed(2) }}</span>
+           </div>
 
-               <Button class="w-full h-16 rounded-[24px] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] text-xs shadow-2xl active:scale-95 transition-all" @click="submitOrder" :disabled="isSubmitting || !orderForm.table_number">
-                  <LucideLoader2 v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
-                  Proceed to Order
-               </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </transition>
-
-    <div v-if="orderSuccess" class="fixed inset-0 z-[150] bg-background/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
-      <div class="max-w-sm w-full text-center space-y-8">
-        <div class="relative mx-auto w-24 h-24">
-          <div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
-          <div class="relative bg-primary rounded-full w-full h-full flex items-center justify-center shadow-2xl">
-            <LucideCheck class="w-12 h-12 text-primary-foreground" />
-          </div>
+           <Button class="w-full h-12 rounded-xl bg-foreground text-background font-bold uppercase tracking-widest text-[10px]" @click="submitOrder" :disabled="isSubmitting || !orderForm.table_number">
+              <LucideLoader2 v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
+              Place My Order
+           </Button>
         </div>
-        <div class="space-y-4">
-          <div class="space-y-1">
-            <h2 class="text-3xl font-black uppercase italic text-foreground tracking-tighter">
-              {{ activeOrder?.status === 'completed' ? 'Order Completed' : 'Order Received' }}
-            </h2>
-            <div class="flex items-center justify-center gap-2">
-               <Badge v-if="activeOrder" variant="secondary" class="rounded-full px-3 py-1 text-[9px] uppercase font-black bg-primary/10 text-primary border-primary/20">
-                 {{ activeOrder.status }}
-               </Badge>
-               <p v-if="activeOrder" class="text-[9px] font-black uppercase text-muted-foreground tracking-widest italic">
-                 #{{ activeOrder.id.slice(-6).toUpperCase() }}
-               </p>
-            </div>
+      </SheetContent>
+    </Sheet>
+
+    <!-- Success Overlay Card -->
+    <div v-if="orderSuccess" class="fixed inset-0 z-[150] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
+      <Card class="max-w-sm w-full p-8 text-center space-y-6 shadow-2xl border-border">
+        <div class="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center text-white shadow-lg shadow-emerald-500/10">
+          <LucideCheck class="w-8 h-8" />
+        </div>
+        
+        <div class="space-y-1.5">
+          <h2 class="text-2xl font-bold tracking-tight uppercase">Order Received</h2>
+          <div class="flex items-center justify-center gap-2">
+             <Badge v-if="activeOrder" variant="secondary" class="rounded-full text-[9px] font-bold uppercase h-5">
+               {{ activeOrder.status }}
+             </Badge>
+             <span v-if="activeOrder" class="text-[9px] font-mono text-muted-foreground border border-border px-2 py-0.5 rounded-full">#{{ activeOrder.id.slice(-6).toUpperCase() }}</span>
           </div>
-          
-          <p class="text-muted-foreground text-sm font-medium leading-relaxed">
-            Your table #{{ orderForm.table_number || activeOrder?.table_number }} order is being handled with care. 
+          <p class="text-muted-foreground text-xs font-medium leading-relaxed pt-2">
+            Table #{{ orderForm.table_number || activeOrder?.table_number }} ticket is now in our kitchen queue.
           </p>
         </div>
 
-        <!-- Order Summary Checklist -->
-        <div v-if="activeOrder?.items" class="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4 max-h-[30vh] overflow-y-auto scrollbar-hide">
-           <div class="flex items-center justify-between border-b border-border/50 pb-3 mb-2">
-             <span class="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Selection Summary</span>
-             <span class="text-[10px] font-black uppercase tracking-widest text-primary italic font-mono">${{ activeOrder.total_price.toFixed(2) }}</span>
-           </div>
-           
-           <div class="space-y-3">
-              <div v-for="item in activeOrder.items" :key="item.id" class="flex items-center justify-between text-[11px] font-bold">
-                 <div class="flex items-center gap-3 italic">
-                    <span class="text-primary">{{ item.quantity }}x</span>
-                    <span class="text-foreground uppercase tracking-tight">{{ item.item_name }}</span>
-                 </div>
-                 <span class="text-muted-foreground/60 font-mono text-[9px]">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
-              </div>
+        <div v-if="activeOrder?.items" class="bg-muted/50 rounded-xl p-4 space-y-3 max-h-[25vh] overflow-y-auto text-left border border-border/50">
+           <div v-for="item in activeOrder.items" :key="item.id" class="flex items-center justify-between text-[10px] font-medium border-b border-border/50 pb-2 last:border-0 last:pb-0">
+              <span class="text-foreground uppercase truncate pr-4">{{ item.quantity }}x {{ item.item_name }}</span>
+              <span class="text-muted-foreground font-mono shrink-0">${{ (item.price_at_time * item.quantity).toFixed(2) }}</span>
            </div>
         </div>
 
-        <div v-else-if="isLoadingActiveOrder" class="py-8 flex flex-col items-center justify-center gap-3">
-           <LucideLoader2 class="w-6 h-6 text-primary animate-spin" />
-           <p class="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Synchronizing Ticket...</p>
-        </div>
-
-        <Button class="w-full h-15 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20" @click="orderSuccess = false">
-           Back to Menu
+        <Button class="w-full h-11 rounded-lg bg-foreground text-background font-bold uppercase tracking-widest text-[10px]" @click="orderSuccess = false">
+           Return to Menu
         </Button>
-      </div>
+      </Card>
     </div>
 
-    <!-- Footer -->
-    <footer class="py-24 border-t border-border text-center space-y-6 flex flex-col items-center">
-      <div v-if="data?.shop?.logo_url" class="w-12 h-12 rounded-2xl overflow-hidden opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
+    <!-- Clean Minimalist Footer -->
+    <footer class="py-12 border-t border-border text-center space-y-4">
+      <div v-if="data?.shop?.logo_url" class="w-8 h-8 rounded-lg overflow-hidden opacity-30 mx-auto grayscale">
          <img :src="data.shop.logo_url" class="w-full h-full object-cover" />
       </div>
-      <div v-else class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center border border-border">
-         <LucideChefHat class="w-5 h-5 text-muted-foreground/20" />
-      </div>
-      <div class="space-y-2">
-        <p class="text-[9px] font-black text-muted-foreground/50 uppercase tracking-[0.5em] leading-none mb-1">Authenticated by</p>
-        <p class="text-[12px] font-black text-foreground uppercase tracking-widest italic">{{ data?.shop?.name || 'Digital Menu Platform' }}</p>
-        <p v-if="data?.shop?.phone" class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{{ data.shop.phone }}</p>
+      <div class="space-y-1">
+        <p class="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-[0.4em]">Powered by</p>
+        <p class="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest leading-none">{{ data?.shop?.name || 'System' }}</p>
       </div>
     </footer>
   </div>
@@ -276,10 +228,10 @@
 import { 
   ChefHat as LucideChefHat, Search as LucideSearch, Plus as LucidePlus, ShoppingCart as LucideShoppingCart,
   Minus as LucideMinus, Loader2 as LucideLoader2, MapPin as LucideMapPin, Info as LucideInfo,
-  Check as LucideCheck
+  Check as LucideCheck, Eye as LucideEye
 } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Card } from '~/components/ui';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
 import { Badge } from '~/components/ui/badge';
