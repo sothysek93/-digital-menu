@@ -315,12 +315,7 @@ watch(orderSuccess, (val) => {
     }
 });
 
-onMounted(() => {
-    if (persistedOrderId.value) {
-        fetchActiveOrder();
-    }
-});
-
+// Local Order Persistence
 const scrollToCategory = (catName: string) => {
   activeCategory.value = catName;
   const el = document.getElementById(`cat-${catName}`);
@@ -329,10 +324,27 @@ const scrollToCategory = (catName: string) => {
   }
 };
 
-// Local Order Persistence
-const persistedOrderId = useState<string | null>('active-order-id', () => {
-    if (process.client) return localStorage.getItem('last_order_id');
-    return null;
+const persistedOrderId = useState<string | null>('active-order-id', () => null);
+
+onMounted(() => {
+    // Hydrate state from localStorage on mount (Client-side only)
+    if (process.client) {
+        // 1. Hydrate Order Tracking
+        const lastId = localStorage.getItem('last_order_id');
+        if (lastId) {
+            persistedOrderId.value = lastId;
+            fetchActiveOrder();
+        }
+
+        // 2. Hydrate Cart
+        const savedBasket = localStorage.getItem(`basket_v1_${slug}`);
+        if (savedBasket && cart.value.length === 0) {
+            try { 
+                const parsed = JSON.parse(savedBasket); 
+                if (Array.isArray(parsed)) cart.value = parsed;
+            } catch (e) { console.error('Basket hydration failed', e); }
+        }
+    }
 });
 
 // Fetch Menu Data
