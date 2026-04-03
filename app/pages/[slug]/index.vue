@@ -352,27 +352,32 @@ const groupedMenu = computed(() => {
   return groups;
 });
 
-// Cart Logic
-const cart = useState<any[]>('menu-cart', () => {
-    // Initial state: try to load from localStorage if on client
+// Cart Logic (Persistent via LocalStorage on Client)
+const cart = useState<any[]>('menu-cart', () => []);
+const cartTotalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
+const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+
+onMounted(() => {
+    // Hydrate cart from localStorage on mount (Client-side only)
     if (process.client) {
         const saved = localStorage.getItem(`basket_v1_${slug}`);
-        if (saved) {
-            try { return JSON.parse(saved); } catch (e) { return []; }
+        if (saved && cart.value.length === 0) {
+            try { 
+                const parsed = JSON.parse(saved); 
+                if (Array.isArray(parsed)) cart.value = parsed;
+            } catch (e) {
+                console.error('Failed to hydrate basket', e);
+            }
         }
     }
-    return [];
 });
 
-// Sync cart to localStorage whenever it evolves
+// Watch and Persist Cart Changes
 if (process.client) {
     watch(cart, (newCart) => {
         localStorage.setItem(`basket_v1_${slug}`, JSON.stringify(newCart));
     }, { deep: true });
 }
-
-const cartTotalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
-const cartTotalValue = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
 
 const addToCart = (item: any) => {
   const existing = cart.value.find(i => i.id === item.id);
