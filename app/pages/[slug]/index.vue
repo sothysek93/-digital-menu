@@ -7,20 +7,30 @@
            <img :src="data.shop.logo_url" class="w-full h-full object-cover" />
         </div>
         <div v-else class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-          <LucideChefHat class="w-5 h-5 text-primary-foreground" />
+           <LucideChefHat class="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
           <h1 class="text-[12px] font-black tracking-[0.2em] text-foreground uppercase">
              {{ data?.shop?.name || 'Menu Experience' }}
           </h1>
-          <p v-if="data?.shop?.business_hours" class="text-[8px] font-bold text-muted-foreground uppercase tracking-widest leading-none mt-0.5">
-            {{ data.shop.business_hours }}
-          </p>
+          <div class="flex items-center gap-2 mt-0.5">
+             <div v-if="table" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted border border-border text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+                <div class="w-1 h-1 rounded-full bg-primary"></div>
+                Table {{ table }}
+             </div>
+             <p v-if="data?.shop?.business_hours" class="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">
+               {{ data.shop.business_hours }}
+             </p>
+          </div>
         </div>
       </div>
-      <div v-if="table" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground shadow-sm">
-        <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-        Table {{ table }}
+      
+      <!-- Track My Order Chip -->
+      <div v-if="persistedOrderId" class="animate-in fade-in slide-in-from-right-4 duration-500">
+         <Button variant="outline" size="sm" class="h-8 rounded-full border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest px-3 hover:bg-primary/10" @click="viewRecentOrder">
+            <LucideLoader2 class="w-3 h-3 mr-1.5 animate-spin" />
+            Track Order
+         </Button>
       </div>
     </header>
 
@@ -98,8 +108,9 @@
     
     <!-- Floating Cart Button -->
     <transition enter-active-class="transition duration-300 ease-out" enter-from-class="translate-y-20 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-20 opacity-0">
-      <div v-if="cartTotalItems > 0" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-6">
-        <Sheet>
+      <!-- UI Fix: Only show floating button if sheet is NOT open -->
+      <div v-if="cartTotalItems > 0 && !isSheetOpen" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-6">
+        <Sheet v-model:open="isSheetOpen">
           <SheetTrigger as-child>
             <Button class="w-full h-15 rounded-3xl bg-primary text-primary-foreground shadow-2xl flex items-center justify-between px-6 transform hover:scale-[1.02] active:scale-[0.98] transition-all group">
               <div class="flex items-center gap-3">
@@ -117,7 +128,7 @@
               <span class="font-mono font-black text-base italic">${{ cartTotalValue.toFixed(2) }}</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" class="h-[85vh] rounded-t-[50px] px-8 pt-10 pb-12 flex flex-col border-t-0 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)]">
+          <SheetContent side="bottom" class="h-[85vh] rounded-t-[50px] px-8 pt-10 pb-12 flex flex-col border-t-0 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)] z-[130]">
             <SheetHeader class="space-y-1 mb-8">
               <p class="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Order Overview</p>
               <SheetTitle class="text-4xl font-black uppercase italic text-foreground leading-none tracking-tighter">Your Selection</SheetTitle>
@@ -172,7 +183,7 @@
       </div>
     </transition>
 
-    <div v-if="orderSuccess" class="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
+    <div v-if="orderSuccess" class="fixed inset-0 z-[150] bg-background/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
       <div class="max-w-sm w-full text-center space-y-8">
         <div class="relative mx-auto w-24 h-24">
           <div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
@@ -225,14 +236,18 @@ const route = useRoute();
 const slug = route.params.slug as string;
 const table = ref(route.query.table as string || '');
 
-// Define Interfaces
-interface OrderItem {
-  menu_item_id: string;
-  quantity: number;
-  price_at_time: number;
-}
+// UI state
+const isSheetOpen = ref(false);
+const orderSuccess = ref(false);
+const isSubmitting = ref(false);
 
-// Fetch Menu Data (Shop + Items)
+// Local Order Persistence
+const persistedOrderId = useState<string | null>('active-order-id', () => {
+    if (process.client) return localStorage.getItem('last_order_id');
+    return null;
+});
+
+// Fetch Menu Data
 const { data, pending } = await useFetch<any>(`/api/public/menu?slug=${slug}` as any, {
   key: `menu-live-${slug}`
 });
@@ -277,15 +292,13 @@ const removeFromCart = (id: string) => {
 };
 
 // Order Submission
-const isSubmitting = ref(false);
-const orderSuccess = ref(false);
 const orderForm = reactive({
   customer_name: '',
   table_number: table.value,
   notes: ''
 });
 
-// Sync table from URL if it changes
+// Sync table from URL
 watch(() => route.query.table, (newTable) => {
   if (newTable) table.value = newTable as string;
   orderForm.table_number = table.value;
@@ -301,7 +314,7 @@ const submitOrder = async () => {
   try {
     const shopId = data.value?.shop?.id;
     
-    await $fetch('/api/public/orders', {
+    const res = await $fetch('/api/public/orders' as any, {
       method: 'POST',
       body: {
         shop_id: shopId,
@@ -314,9 +327,15 @@ const submitOrder = async () => {
           price_at_time: i.price
         }))
       }
-    });
+    }) as any;
+
+    if (res.id) {
+        localStorage.setItem('last_order_id', res.id);
+        persistedOrderId.value = res.id;
+    }
 
     orderSuccess.value = true;
+    isSheetOpen.value = false;
     cart.value = [];
   } catch (e) {
     console.error('Order error:', e);
@@ -324,5 +343,9 @@ const submitOrder = async () => {
   } finally {
     isSubmitting.value = false;
   }
+};
+
+const viewRecentOrder = () => {
+    orderSuccess.value = true;
 };
 </script>
